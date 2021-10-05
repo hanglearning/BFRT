@@ -1,3 +1,5 @@
+import numpy as np
+
 """ Functions to process the data before training, including constructing the training and test data with scaling
 
 NOTE - set the `attr` value for the learning and predicting feature (consistent in both functions)
@@ -11,7 +13,7 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 attr = 'volume'
 
-def process_pretrain_data(df_train):
+def process_pretrain_data(df_train, INPUT_LENGTH):
     """Process data
 
     # Arguments
@@ -36,7 +38,7 @@ def process_pretrain_data(df_train):
     return X_train, y_train
 
 
-def process_data(df_train, df_test, is_chained):
+def process_data(df_train, df_test, is_chained, INPUT_LENGTH):
     """Process data
     # Arguments
         df_train: pandas data frame, trainig data.

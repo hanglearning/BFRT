@@ -1,4 +1,3 @@
-# Prepare for LSTM model
 """
 Defination of NN model
 """

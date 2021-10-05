@@ -45,7 +45,7 @@ def train_baseline_model(comm_round, model_path, X_train, y_train, sensor_id, th
     return model_file_path
 
 
-def train_local_model(comm_round, global_weights, X_train, y_train, sensor_id, this_sensor_dir_path, config):
+def train_local_model(comm_round, global_weights, X_train, y_train, sensor_id, this_sensor_dir_path, config, INPUT_LENGTH):
     """train the local model 
 
     # Arguments
