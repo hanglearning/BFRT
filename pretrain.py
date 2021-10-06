@@ -12,6 +12,8 @@ import numpy as np
 from build_lstm import build_lstm
 from process_data import process_pretrain_data
 
+import tf.keras.callbacks.ModelCheckpoint
+
 ''' SET UP TRAINING CONFIG 
 
 Note - 
@@ -72,6 +74,15 @@ def pretrain_model(model, X_train, y_train, log_files_folder_path, pretrain_conf
     """
 
     model.compile(loss="mse", optimizer="rmsprop", metrics=['mape'])
+    model_checkpoint_path = f'{log_files_folder_path}/pretrain_checkpoint'
+    model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+      filepath=model_checkpoint_path,
+      save_weights_only=True,
+      monitor='val_accuracy',
+      mode='max',
+      save_best_only=True,
+      save_freq='epoch',
+      period=10)
     hist = model.fit(
         X_train, y_train,
         batch_size=pretrain_config["batch"],
