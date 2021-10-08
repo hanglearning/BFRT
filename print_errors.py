@@ -21,6 +21,8 @@ with open(args['all_predicts_path'], 'rb') as f:
     sensor_predicts = pickle.load(f)
 
 for sensor_file, models_attr in sensor_predicts.items():
+
+    model_to_compare = "global_onestep"
     
     sensor_id = sensor_file.split('.')[0]
     
@@ -34,7 +36,7 @@ for sensor_file, models_attr in sensor_predicts.items():
 
     # record global data
     global_data = {}
-    predicts = models_attr['global']
+    predicts = models_attr[model_to_compare]
     for predict in predicts[-args['error_rounds']:]:
         round = predict[0]
         data = predict[1]
