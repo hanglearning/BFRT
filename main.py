@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from datetime import datetime
 import pickle
+import argparse
 
 from keras.models import load_model
 
@@ -14,32 +15,46 @@ from model_training import train_baseline_model
 from model_training import train_local_model
 from chain_predict import chain_predict
 
-''' Global Variables Set Up '''
+parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description="traffic_fedavg_simulation")
 
-INPUT_LENGTH = 12
+parser.add_argument('-rp', '--resume_path', type=str, default=None, help='provide the leftover log folder path to continue FL')
+parser.add_argument('-il', '--input_length', type=int, default=12, help='input length for the LSTM network')
+parser.add_argument('-dp', '--data_path', type=str, default='/content/drive/MyDrive/Traffic Prediction FedAvg Simulation/traffic_data/Preprocessed_V1.1_4sensors', help='dataset path')
+parser.add_argument('-b', '--batch', type=int, default=1, help='batch number for FL')
+parser.add_argument('-e', '--epoch', type=int, default=20, help='epoch number per comm round for FL')
+parser.add_argument('-c', '--comm_rounds', type=int, default=240, help='number of comm rounds')
 
-# create log folder indicating by current running date and time
-date_time = datetime.now().strftime("%m%d%Y_%H%M%S")
-log_files_folder_path = f"/content/drive/MyDrive/Traffic Prediction FedAvg Simulation/device_outputs_Preprocessed_V1.1/{date_time}"
-# manual set of log_files_folder_path. Used while resuming training
-# log_files_folder_path = f"/content/drive/MyDrive/Traffic Prediction FedAvg Simulation/device_outputs_Preprocessed_V1.1/manual_set_here"
 
-dataset_path = '/content/drive/MyDrive/Traffic Prediction FedAvg Simulation/traffic_data/Preprocessed_V1.1_4sensors'
-
-# FL config 
-fl_config = {"batch": 1, "epochs": 20}
-communication_rounds = 240 # 1 comm round = 1 hour
-
-vars_record = {} # to be stored and used for resuming training
-vars_record["INPUT_LENGTH"] = INPUT_LENGTH
-vars_record["dataset_path"] = dataset_path
-vars_record["fl_config"] = fl_config
-vars_record["communication_rounds"] = communication_rounds
+args = parser.parse_args()
+args = args.__dict__
 
 # determine if resume training
 resume_training = False
-if len(os.listdir(log_files_folder_path)) > 0:
+if args['resume_path']:
 	resume_training = True
+	log_files_folder_path = args['resume_path']
+else:
+	''' Global Variables Set Up '''
+
+	INPUT_LENGTH = args['input_length']
+
+	# create log folder indicating by current running date and time
+	date_time = datetime.now().strftime("%m%d%Y_%H%M%S")
+	log_files_folder_path = f"/content/drive/MyDrive/Traffic Prediction FedAvg Simulation/device_outputs_Preprocessed_V1.1/{date_time}"
+	
+	dataset_path = args['data_path']
+
+	# FL config 
+	fl_config = {"batch": args['batch'], "epochs":  args['epoch']}
+	communication_rounds = args['comm_rounds'] # 1 comm round = 1 hour
+
+	vars_record = {} # to be stored and used for resuming training
+	vars_record["INPUT_LENGTH"] = INPUT_LENGTH
+	vars_record["dataset_path"] = dataset_path
+	vars_record["fl_config"] = fl_config
+	vars_record["communication_rounds"] = communication_rounds
+
+
 
 ''' Global Variables Set Up (END)'''
 
