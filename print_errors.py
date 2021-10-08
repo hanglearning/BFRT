@@ -1,6 +1,9 @@
+# from IPython.display import display
+
 import argparse
 import pickle
 import pandas as pd
+from tabulate import tabulate
 
 from error_calc import get_MAE
 from error_calc import get_MSE
@@ -16,6 +19,12 @@ parser.add_argument('-er', '--error_rounds', type=int, default=24, help='Show er
 
 args = parser.parse_args()
 args = args.__dict__
+
+def highlight_max(cell):
+    if type(cell) != str and cell < 0 :
+        return 'background: red; color:black'
+    else:
+        return 'background: black; color: white'
 
 # with open(predictions_record_saved_path, 'rb') as f:
 with open(args['all_predicts_path'], 'rb') as f:
@@ -52,6 +61,7 @@ for sensor_file, models_attr in sensor_predicts.items():
         error_values[round]['RMSE'] = get_RMSE(data, global_data[round])
         error_values[round]['MAPE'] = get_MAPE(data, global_data[round])
 
-    error_values_df = pd.DataFrame.from_dict(error_values, index=['MAE', 'MSE', 'RMSE', 'MAPE'])
+    error_values_df = pd.DataFrame.from_dict(error_values)
     print(f'\nfor {sensor_id}')
-    print(error_values_df)
+    print(tabulate(error_values_df.round(2), headers='keys', tablefmt='psql'))
+    # display(error_values_df.round(2).style.applymap(highlight_max))
