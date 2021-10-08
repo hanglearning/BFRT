@@ -1,5 +1,6 @@
 import argparse
 import pickle
+import pandas as pd
 
 from error_calc import get_MAE
 from error_calc import get_MSE
@@ -51,4 +52,6 @@ for sensor_file, models_attr in sensor_predicts.items():
         error_values[round]['RMSE'] = get_RMSE(data, global_data[round])
         error_values[round]['MAPE'] = get_MAPE(data, global_data[round])
 
-print(error_values)
+    error_values_df = pd.DataFrame.from_dict(error_values, index=['MAE', 'MSE', 'RMSE', 'MAPE'])
+    print(f'\nfor {sensor_id}')
+    print(error_values_df)
