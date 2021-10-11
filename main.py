@@ -137,8 +137,7 @@ else:
 	# begin main function
 
 	# train, FedAvg, Prediction (simulating real-time training)
-	import pdb
-	pdb.set_trace()
+
 	# init baseline models
 	baseline_models = {}
 	for sensor_file in all_sensor_files:
