@@ -152,13 +152,14 @@ else:
 		
 		if pretrained_model_file_path:
 			baseline_model = load_model(pretrained_model_file_path)
+			model_file_path = pretrained_model_file_path
 		else:
 			baseline_model = build_lstm([INPUT_LENGTH, 64, 64, 1])
 			model_file_path = f'{this_sensor_h5_baseline_model_path}/{sensor_id}_baseline_0.h5'
 			baseline_model.save(model_file_path)
-			baseline_models[sensor_file] = {}
-			baseline_models[sensor_file]['model_file_path'] = model_file_path
-			baseline_models[sensor_file]['this_sensor_dir_path'] = this_sensor_dir_path
+		baseline_models[sensor_file] = {}
+		baseline_models[sensor_file]['model_file_path'] = model_file_path
+		baseline_models[sensor_file]['this_sensor_dir_path'] = this_sensor_dir_path
 
 	# init global model
 	if pretrained_model_file_path:
