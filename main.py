@@ -113,9 +113,10 @@ if resume_training:
 	INPUT_LENGTH = vars_record["INPUT_LENGTH"]
 	# load starting round
 	with open(f'{log_files_folder_path}/rounds_done.txt', 'r') as f:
-		STARTING_ROUND = int(f.readlines()[-1]) + 1
+		latest_round = int(f.readlines()[-1])
+		STARTING_ROUND = latest_round + 1
 	# load global model
-	global_model = load_model(f'{log_files_folder_path}/globals/round_{STARTING_ROUND}.h5')
+	global_model = load_model(f'{log_files_folder_path}/globals/round_{latest_round}.h5')
 	# load all_sensor_predicts
 	with open(f"{log_files_folder_path}/all_predicts.pkl", 'rb') as f:
 		sensor_predicts = pickle.load(f)
