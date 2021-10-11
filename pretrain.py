@@ -11,30 +11,31 @@ import pandas as pd
 import numpy as np
 from build_lstm import build_lstm
 from process_data import process_pretrain_data
+import argparse
 
 import tf.keras.callbacks.ModelCheckpoint
 
-''' SET UP TRAINING CONFIG 
 
-Note - 
+parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description="traffic_fedavg_simulation")
 
-1 - Specify the  `pretrain_config`, which includes the batch number.
+parser.add_argument('-il', '--input_length', type=int, default=12, help='input length for the LSTM network')
+parser.add_argument('-dp', '--data_path', type=str, default='/content/drive/MyDrive/Traffic Prediction FedAvg Simulation/traffic_data/Preprocessed_V1.1_4sensors', help='dataset path')
+parser.add_argument('-p', '--pretrain_percentage', type=float, default=1.00, help='MUST SPECIFY `pre_train_percentage` to be non-0 for the pretrain function to run.')
+parser.add_argument('-b', '--batch', type=int, default=256, help='batch number for the pretrain dataset')
+parser.add_argument('-e', '--epoch', type=int, default=150, help='epoch number for pretrain')
 
-2 - MUST SPECIFY `pre_train_percentage` to be non-0 for the pretrain function to run.
+args = parser.parse_args()
+args = args.__dict__
 
-'''
-pretrain_config = {"batch": 256, "epochs": 150}
-pretrain_percentage = 1
-
-INPUT_LENGTH = 12
+dataset_path = args['data_path']
+pretrain_config = {"batch": args['batch'], "epochs":  args['epoch']}
+pretrain_percentage = args['pretrain_percentage']
+INPUT_LENGTH = args['input_length']
 
 # create log folder indicating by current running date and time
 date_time = datetime.now().strftime("%m%d%Y_%H%M%S")
 log_files_folder_path = f"/content/drive/MyDrive/Traffic Prediction FedAvg Simulation/device_outputs_Preprocessed_V1.1/{date_time}_pretrain"
 
-dataset_path = '/content/drive/MyDrive/Traffic Prediction FedAvg Simulation/traffic_data/Preprocessed_V1.1_4sensors'
-
-''' SET UP TRAINING CONFIG (END) '''
 
 
 
@@ -117,7 +118,6 @@ def run_pretrain(log_files_folder_path, pretrain_config, pretrain_percentage, al
       pickle.dump(post_pretrain_data_index, f)
 
   print(f"The path to the file of this pretrained model is located at {pretrained_model_file_path}")
-
 
 # Import data files (csv)
 all_sensor_files = [f for f in listdir(dataset_path) if isfile(join(dataset_path, f)) and '.csv' in f]
