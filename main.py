@@ -28,6 +28,8 @@ parser.add_argument('-c', '--comm_rounds', type=int, default=240, help='number o
 args = parser.parse_args()
 args = args.__dict__
 
+dataset_path = args['data_path']
+
 # determine if resume training
 resume_training = False
 if args['resume_path']:
@@ -41,8 +43,6 @@ else:
 	# create log folder indicating by current running date and time
 	date_time = datetime.now().strftime("%m%d%Y_%H%M%S")
 	log_files_folder_path = f"/content/drive/MyDrive/Traffic Prediction FedAvg Simulation/device_outputs_Preprocessed_V1.1/{date_time}"
-	
-	dataset_path = args['data_path']
 
 	# FL config 
 	fl_config = {"batch": args['batch'], "epochs":  args['epoch']}
