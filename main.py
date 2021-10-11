@@ -137,7 +137,8 @@ else:
 	# begin main function
 
 	# train, FedAvg, Prediction (simulating real-time training)
-
+	import pdb
+	pdb.set_trace()
 	# init baseline models
 	baseline_models = {}
 	for sensor_file in all_sensor_files:
@@ -263,8 +264,6 @@ for round in range(STARTING_ROUND, communication_rounds + 1):
 		print(f"{sensor_id} now training on row {training_data_starting_index} to {training_data_ending_index}...")
 		# train baseline model
 		print(f"{sensor_id} training baseline model..")
-		import pdb
-		pdb.set_trace()
 		new_baseline_model_path = train_baseline_model(round, baseline_models[sensor_file]['model_file_path'], X_train, y_train, sensor_id, baseline_models[sensor_file]['this_sensor_dir_path'], fl_config)
 		baseline_models[sensor_file]['model_file_path'] = new_baseline_model_path
 		# train local model
