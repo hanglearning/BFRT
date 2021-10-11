@@ -54,25 +54,24 @@ else:
 	vars_record["fl_config"] = fl_config
 	vars_record["communication_rounds"] = communication_rounds
 
+	""" Import data files (csv) """
 
+	# Get all available files named by sensor ids with .csv extension
+
+	all_sensor_files = [f for f in listdir(dataset_path) if isfile(join(dataset_path, f)) and '.csv' in f]
+	print(f'We have {len(all_sensor_files)} sensors available.')
+	vars_record["all_sensor_files"] = all_sensor_files
 
 ''' Global Variables Set Up (END)'''
 
-""" 1. Import data files (csv) """
 
-# Get all available files named by sensor ids with .csv extension
-
-all_sensor_files = [f for f in listdir(dataset_path) if isfile(join(dataset_path, f)) and '.csv' in f]
-print(f'We have {len(all_sensor_files)} sensors available.')
-vars_record["all_sensor_files"] = all_sensor_files
-
-""" 2. Optional - Construct the pretrained model.
+""" Optional - Construct the pretrained model.
 
 RUN THIS FUNCTION IN pretrain.py
 
 """
 
-""" 3. Main functions for learning and predictions
+""" Main functions for learning and predictions
 
 (1) Data input of the learning process for both chained predictions and 1-step look_ahead prediction (as a baseline to compare with the errors from chained predictions).
 
@@ -277,8 +276,6 @@ for round in range(STARTING_ROUND, communication_rounds + 1):
 		baseline_model = load_model(new_baseline_model_path)
 		local_model = load_model(new_local_model_path)
 		''' Onestep predictions '''
-		# import pdb
-		# pdb.set_trace()
 		baseline_predicted = baseline_model.predict(X_test_onestep)
 		baseline_predicted = scaler.inverse_transform(baseline_predicted.reshape(-1, 1)).reshape(1, -1)[0]
 		local_predicted = local_model.predict(X_test_onestep)
