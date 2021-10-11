@@ -126,11 +126,11 @@ if resume_training:
 else:
 	# set specific pretrained model, or set it to None to not use a pretrained model
 	# pretrained_model_file_path = None
-    pretrained_model_log_folder = '/content/drive/MyDrive/Traffic Prediction FedAvg Simulation/device_outputs_Preprocessed_V1.1/08262021_181808'
-    pretrained_model_file_path = f'{pretrained_model_log_folder}/pretrain/pretrain.h5'
-    if pretrained_model_file_path:
-        with open(f"{pretrained_model_log_folder}/post_pretrain_data_index.pkl", 'rb') as f:
-            post_pretrain_data_index = pickle.load(f)
+	pretrained_model_log_folder = '/content/drive/MyDrive/Traffic Prediction FedAvg Simulation/device_outputs_Preprocessed_V1.1/08262021_181808'
+	pretrained_model_file_path = f'{pretrained_model_log_folder}/pretrain/pretrain.h5'
+	if pretrained_model_file_path:
+		with open(f"{pretrained_model_log_folder}/post_pretrain_data_index.pkl", 'rb') as f:
+			post_pretrain_data_index = pickle.load(f)
 	os.makedirs(f'{log_files_folder_path}/globals', exist_ok=True)
 
 	# tf.compat.v1.disable_v2_behavior() # model trained in tf1
