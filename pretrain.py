@@ -35,6 +35,7 @@ INPUT_LENGTH = args['input_length']
 # create log folder indicating by current running date and time
 date_time = datetime.now().strftime("%m%d%Y_%H%M%S")
 log_files_folder_path = f"/content/drive/MyDrive/Traffic Prediction FedAvg Simulation/device_outputs_Preprocessed_V1.1/{date_time}_pretrain"
+os.makedirs(log_files_folder_path, exist_ok=True)
 
 def build_pretrain_dataset(pretrain_percentage, INPUT_LENGTH, all_sensor_files, dataset_path):
   
