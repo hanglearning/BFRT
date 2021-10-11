@@ -111,6 +111,7 @@ if resume_training:
 	all_sensor_files = vars_record["all_sensor_files"]
 	starting_data_index = vars_record["starting_data_index"]
 	INPUT_LENGTH = vars_record["INPUT_LENGTH"]
+	created_time_column = vars_record["created_time_column"]
 	# load starting round
 	with open(f'{log_files_folder_path}/rounds_done.txt', 'r') as f:
 		latest_round = int(f.readlines()[-1])
@@ -191,6 +192,7 @@ else:
 		starting_data_index = post_pretrain_data_index[all_sensor_files[0]]
 	else:
 		starting_data_index = 0
+	vars_record["created_time_column"] = created_time_column
 	vars_record["starting_data_index"] = starting_data_index
 	# store training config
 	with open(f"{log_files_folder_path}/vars_record.pkl", 'wb') as f:
