@@ -96,7 +96,7 @@ def pretrain_model(model, X_train, y_train, log_files_folder_path, pretrain_conf
     return model_file_path
 
 def run_pretrain(log_files_folder_path, pretrain_config, pretrain_percentage, all_sensor_files, dataset_path, INPUT_LENGTH):
-  with open(f'{log_files_folder_path}/pretrain_config.txt', 'w') as config_file:
+  with open(f'{log_files_folder_path}/pretrain_config.txt', 'w+') as config_file:
     config_file.write(f"pretrain_config: {repr(pretrain_config)} + \n")
     config_file.write(f"INPUT_LENGTH: {repr(INPUT_LENGTH)} + \n")
     config_file.write(f"pretrain_percentage: {repr(pretrain_percentage)} + \n")
