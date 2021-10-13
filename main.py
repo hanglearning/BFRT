@@ -1,6 +1,7 @@
 import os
 from os import listdir
 from os.path import isfile, join
+import sys
 import numpy as np
 import pandas as pd
 from datetime import datetime
@@ -10,6 +11,7 @@ import argparse
 from keras.models import load_model
 
 from build_lstm import build_lstm
+from build_gru import build_gru
 from process_data import process_data
 from model_training import train_baseline_model
 from model_training import train_local_model
@@ -23,6 +25,7 @@ parser.add_argument('-dp', '--data_path', type=str, default='/content/drive/MyDr
 parser.add_argument('-b', '--batch', type=int, default=1, help='batch number for FL')
 parser.add_argument('-e', '--epoch', type=int, default=20, help='epoch number per comm round for FL')
 parser.add_argument('-c', '--comm_rounds', type=int, default=240, help='number of comm rounds')
+parser.add_argument('-m', '--model', type=str, default='lstm', help='Model to choose - lstm or gru')
 
 
 args = parser.parse_args()
@@ -44,11 +47,21 @@ else:
 	date_time = datetime.now().strftime("%m%d%Y_%H%M%S")
 	log_files_folder_path = f"/content/drive/MyDrive/Traffic Prediction FedAvg Simulation/device_outputs_Preprocessed_V1.1/{date_time}"
 
-	# FL config 
+	# FL config
+
+	model_chosen = args['model']
+	if model_chosen == 'lstm':
+		build_model = build_lstm
+	elif model_chosen == 'gru':
+		build_model = build_gru
+	else:
+		sys.exit(f"Model specification error - must be 'lstm' or 'gru', but got {args['model']}.")
+	
 	fl_config = {"batch": args['batch'], "epochs":  args['epoch']}
 	communication_rounds = args['comm_rounds'] # 1 comm round = 1 hour
 
 	vars_record = {} # to be stored and used for resuming training
+	vars_record["model_chosen"] = model_chosen
 	vars_record["INPUT_LENGTH"] = INPUT_LENGTH
 	vars_record["dataset_path"] = dataset_path
 	vars_record["fl_config"] = fl_config
@@ -112,6 +125,14 @@ if resume_training:
 	starting_data_index = vars_record["starting_data_index"]
 	INPUT_LENGTH = vars_record["INPUT_LENGTH"]
 	created_time_column = vars_record["created_time_column"]
+	model_chosen = vars_record["model_chosen"]
+
+	# init build_model function
+	if model_chosen == 'lstm':
+		build_model = build_lstm
+	elif model_chosen == 'gru':
+		build_model = build_gru
+
 	# load starting round
 	with open(f'{log_files_folder_path}/rounds_done.txt', 'r') as f:
 		latest_round = int(f.readlines()[-1])
@@ -127,9 +148,11 @@ if resume_training:
 else:
 	# set specific pretrained model, or set it to None to not use a pretrained model
 	# pretrained_model_file_path = None
-	pretrained_model_log_folder = '/content/drive/MyDrive/Traffic Prediction FedAvg Simulation/device_outputs_Preprocessed_V1.1/08262021_181808'
+	pretrained_model_log_folder = '/content/drive/MyDrive/Traffic Prediction FedAvg Simulation/device_outputs_Preprocessed_V1.1/08262021_181808_lstm'
 	pretrained_model_file_path = f'{pretrained_model_log_folder}/pretrain/pretrain.h5'
 	if pretrained_model_file_path:
+		if pretrained_model_log_folder[-1] != model_chosen[-1]:
+			sys.exit("Error - pretrained model is a different model from the model that will be trained.")
 		with open(f"{pretrained_model_log_folder}/post_pretrain_data_index.pkl", 'rb') as f:
 			post_pretrain_data_index = pickle.load(f)
 	os.makedirs(f'{log_files_folder_path}/globals', exist_ok=True)
@@ -154,7 +177,7 @@ else:
 			baseline_model = load_model(pretrained_model_file_path)
 			model_file_path = pretrained_model_file_path
 		else:
-			baseline_model = build_lstm([INPUT_LENGTH, 64, 64, 1])
+			baseline_model = build_model([INPUT_LENGTH, 64, 64, 1])
 			model_file_path = f'{this_sensor_h5_baseline_model_path}/{sensor_id}_baseline_0.h5'
 			baseline_model.save(model_file_path)
 		baseline_models[sensor_file] = {}
@@ -166,7 +189,7 @@ else:
 		print("Starting FL with the pretrained model...")
 		global_model = load_model(pretrained_model_file_path)
 	else:
-		global_model = build_lstm([INPUT_LENGTH, 64, 64, 1])
+		global_model = build_model([INPUT_LENGTH, 64, 64, 1])
 		global_model.compile(loss="mse", optimizer="rmsprop", metrics=['mape'])
 		global_model_file_path = f'{log_files_folder_path}/globals/h5'
 		os.makedirs(global_model_file_path, exist_ok=True)

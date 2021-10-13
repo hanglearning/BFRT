@@ -3,6 +3,7 @@
 import os
 from os import listdir
 from os.path import isfile, join
+import sys
 from datetime import datetime
 import math
 import csv
@@ -10,6 +11,8 @@ import pickle
 import pandas as pd
 import numpy as np
 from build_lstm import build_lstm
+from build_gru import build_gru
+
 from process_data import process_pretrain_data
 import argparse
 
@@ -23,18 +26,28 @@ parser.add_argument('-dp', '--data_path', type=str, default='/content/drive/MyDr
 parser.add_argument('-p', '--pretrain_percentage', type=float, default=1.00, help='MUST SPECIFY `pre_train_percentage` to be non-0 for the pretrain function to run.')
 parser.add_argument('-b', '--batch', type=int, default=256, help='batch number for the pretrain dataset')
 parser.add_argument('-e', '--epoch', type=int, default=150, help='epoch number for pretrain')
+parser.add_argument('-m', '--model', type=str, default='lstm', help='Model to choose - lstm or gru')
 
 args = parser.parse_args()
 args = args.__dict__
 
 dataset_path = args['data_path']
+
+model_chosen = args['model']
+if model_chosen == 'lstm':
+    build_model = build_lstm
+elif model_chosen == 'gru':
+    build_model = build_gru
+else:
+    sys.exit(f"Model specification error - must be 'lstm' or 'gru', but got {args['model']}.")
+    
 pretrain_config = {"batch": args['batch'], "epochs":  args['epoch']}
 pretrain_percentage = args['pretrain_percentage']
 INPUT_LENGTH = args['input_length']
 
 # create log folder indicating by current running date and time
 date_time = datetime.now().strftime("%m%d%Y_%H%M%S")
-log_files_folder_path = f"/content/drive/MyDrive/Traffic Prediction FedAvg Simulation/device_outputs_Preprocessed_V1.1/{date_time}_pretrain"
+log_files_folder_path = f"/content/drive/MyDrive/Traffic Prediction FedAvg Simulation/device_outputs_Preprocessed_V1.1/{date_time}_pretrain_{model_chosen}"
 os.makedirs(log_files_folder_path, exist_ok=True)
 
 def build_pretrain_dataset(pretrain_percentage, INPUT_LENGTH, all_sensor_files, dataset_path):
@@ -107,7 +120,7 @@ def run_pretrain(log_files_folder_path, pretrain_config, pretrain_percentage, al
   X_train, y_train = process_pretrain_data(pretrain_dataset, INPUT_LENGTH)
   X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
   # build pretrain model
-  model_to_pretrain = build_lstm([INPUT_LENGTH, 64, 64, 1])
+  model_to_pretrain = build_model([INPUT_LENGTH, 64, 64, 1])
   # begin training
   pretrained_model_file_path = pretrain_model(model_to_pretrain, X_train, y_train, log_files_folder_path, pretrain_config)
 
