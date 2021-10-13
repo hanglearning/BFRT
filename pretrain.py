@@ -69,7 +69,7 @@ def build_pretrain_dataset(pretrain_percentage, INPUT_LENGTH, all_sensor_files, 
     data_index = int(math.floor( (num_lines-1) // INPUT_LENGTH * pretrain_percentage )*INPUT_LENGTH)
     pretrain_data = pd.read_csv(file_path, nrows = data_index, encoding='utf-8').fillna(0)
     post_pretrain_data_index[sensor_file] = data_index
-    pretrain_datasets.append(pretrain_data)
+    pretrain_datasets.append((sensor_file, pretrain_data))
 
   # return pd.concat(pretrain_datasets, axis=0), post_pretrain_data_index
   return pretrain_datasets, post_pretrain_data_index
@@ -110,9 +110,10 @@ def run_pretrain(log_files_folder_path, pretrain_config, pretrain_percentage, al
   # process data
   processed_pretrain_datasets = []
   for pretrain_dataset in pretrain_datasets:
-    X_train, y_train = process_pretrain_data(pretrain_dataset, INPUT_LENGTH)
+    (sensor_file, pretrain_data) = pretrain_dataset
+    X_train, y_train = process_pretrain_data(pretrain_data, INPUT_LENGTH)
     X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
-    processed_pretrain_datasets.append((X_train, y_train))
+    processed_pretrain_datasets.append((sensor_file, X_train, y_train))
   # build pretrain model
   model_to_pretrain = build_model([INPUT_LENGTH, 64, 64, 1])
   model_to_pretrain.compile(loss="mse", optimizer="rmsprop", metrics=['mape'])
@@ -122,7 +123,8 @@ def run_pretrain(log_files_folder_path, pretrain_config, pretrain_percentage, al
   for epoch in range(1, pretrain_config["epochs"] + 1):
       seq = 1
       for processed_pretrain_dataset in processed_pretrain_datasets: # instead of csv concatenation
-          X_train, y_train = processed_pretrain_dataset[0], processed_pretrain_dataset[1]
+          (sensor_file, X_train, y_train) = processed_pretrain_dataset
+          print(f"Training epoch {epoch} csv file {seq}/{len(processed_pretrain_datasets)} {sensor_file}...")
           model_file_path = pretrain_model(model_file_path, X_train, y_train, log_files_folder_path, epoch, seq, pretrain_config["batch"])
           seq += 1
 
