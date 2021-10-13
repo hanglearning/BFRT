@@ -26,7 +26,7 @@ parser.add_argument('-b', '--batch', type=int, default=1, help='batch number for
 parser.add_argument('-e', '--epoch', type=int, default=20, help='epoch number per comm round for FL')
 parser.add_argument('-c', '--comm_rounds', type=int, default=240, help='number of comm rounds')
 parser.add_argument('-m', '--model', type=str, default='lstm', help='Model to choose - lstm or gru')
-parser.add_argument('-pt', '--pretrained_path', type=str, default=None, help='The pretrained model log path')
+parser.add_argument('-pre', '--pretrained_path', type=str, default=None, help='The pretrained model log path')
 
 
 args = parser.parse_args()
