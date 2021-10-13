@@ -26,6 +26,7 @@ parser.add_argument('-b', '--batch', type=int, default=1, help='batch number for
 parser.add_argument('-e', '--epoch', type=int, default=20, help='epoch number per comm round for FL')
 parser.add_argument('-c', '--comm_rounds', type=int, default=240, help='number of comm rounds')
 parser.add_argument('-m', '--model', type=str, default='lstm', help='Model to choose - lstm or gru')
+parser.add_argument('-pt', '--pretrained_path', type=str, default=None, help='The pretrained model log path')
 
 
 args = parser.parse_args()
@@ -147,9 +148,11 @@ if resume_training:
 		baseline_models = pickle.load(f)
 else:
 	# set specific pretrained model, or set it to None to not use a pretrained model
-	# pretrained_model_file_path = None
-	pretrained_model_log_folder = '/content/drive/MyDrive/Traffic Prediction FedAvg Simulation/device_outputs_Preprocessed_V1.1/08262021_181808_lstm'
-	pretrained_model_file_path = f'{pretrained_model_log_folder}/pretrain/pretrain.h5'
+	pretrained_model_file_path = None
+	if args['pretrained_path']:
+		pretrained_model_log_folder = args['pretrained_path']
+		# pretrained_model_log_folder = '/content/drive/MyDrive/Traffic Prediction FedAvg Simulation/device_outputs_Preprocessed_V1.1/08262021_181808_lstm'
+		pretrained_model_file_path = f'{pretrained_model_log_folder}/pretrain/pretrain.h5'
 	if pretrained_model_file_path:
 		if pretrained_model_log_folder[-1] != model_chosen[-1]:
 			sys.exit("Error - pretrained model is a different model from the model that will be trained.")
