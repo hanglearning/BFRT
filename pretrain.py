@@ -141,6 +141,7 @@ def run_pretrain(log_files_folder_path, pretrain_config, pretrain_percentage, al
 	  seq = 1
   else:
 	  [*_, starting_epoch, seq] = resume_path.split(".")[-2].split("_")
+	  starting_epoch = int(starting_epoch)
 	  if seq == len(processed_pretrain_datasets):
 		  starting_epoch += 1
 		  seq = 1
