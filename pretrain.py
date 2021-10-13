@@ -118,6 +118,9 @@ def pretrain_model(model_path, X_train, y_train, log_files_folder_path, epoch, s
 def run_pretrain(log_files_folder_path, pretrain_config, pretrain_percentage, all_sensor_files, dataset_path, INPUT_LENGTH, args["resume_path"]):
   # build pretrain_dataset
   pretrain_datasets, post_pretrain_data_index = build_pretrain_dataset(pretrain_percentage, INPUT_LENGTH, all_sensor_files, dataset_path)
+  post_pretrain_data_index_saved_path = f'{log_files_folder_path}/post_pretrain_data_index.pkl'
+  with open(post_pretrain_data_index_saved_path, 'wb') as f:
+      pickle.dump(post_pretrain_data_index, f)
   # process data
   processed_pretrain_datasets = []
   for pretrain_dataset in pretrain_datasets:
@@ -148,10 +151,6 @@ def run_pretrain(log_files_folder_path, pretrain_config, pretrain_percentage, al
           model_file_path = pretrain_model(model_file_path, X_train, y_train, log_files_folder_path, epoch, seq, pretrain_config["batch"])
           seq += 1
       seq = 1
-
-  post_pretrain_data_index_saved_path = f'{log_files_folder_path}/post_pretrain_data_index.pkl'
-  with open(post_pretrain_data_index_saved_path, 'wb') as f:
-      pickle.dump(post_pretrain_data_index, f)
 
   print(f"The path to the file of this pretrained model is located at {model_file_path}")
 
