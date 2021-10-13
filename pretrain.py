@@ -37,7 +37,8 @@ args = args.__dict__
 dataset_path = args['data_path']
 
 if args["resume_path"]:
-	with open(f"{str(Path(args['resume_path']).parent.absolute())}/vars_record.pkl", 'rb') as f:
+	log_files_folder_path = str(Path(args['resume_path']).parent.absolute())
+	with open(f"{log_files_folder_path}/vars_record.pkl", 'rb') as f:
 		vars_record = pickle.load(f)
 	model_chosen = vars_record['model']
 	pretrain_config = vars_record['pretrain_config']
