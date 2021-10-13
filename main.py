@@ -296,7 +296,7 @@ for round in range(STARTING_ROUND, communication_rounds + 1):
 		baseline_models[sensor_file]['model_file_path'] = new_baseline_model_path
 		# train local model
 		print(f"{sensor_id} training local model..")
-		new_local_model_path, new_local_model_weights = train_local_model(round, global_weights, X_train, y_train, sensor_id, baseline_models[sensor_file]['this_sensor_dir_path'], fl_config, INPUT_LENGTH)  
+		new_local_model_path, new_local_model_weights = train_local_model(round, global_weights, X_train, y_train, sensor_id, baseline_models[sensor_file]['this_sensor_dir_path'], fl_config, INPUT_LENGTH, build_model)  
 		# record local model
 		local_model_weights.append(new_local_model_weights)
 

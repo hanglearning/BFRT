@@ -16,6 +16,7 @@ import warnings
 warnings.filterwarnings("ignore")
 from keras.models import load_model
 from build_lstm import build_lstm
+from build_gru import build_gru
 
 def train_baseline_model(comm_round, model_path, X_train, y_train, sensor_id, this_sensor_dir_path, config):
     """train the baseline model 
@@ -46,7 +47,7 @@ def train_baseline_model(comm_round, model_path, X_train, y_train, sensor_id, th
     return model_file_path
 
 
-def train_local_model(comm_round, global_weights, X_train, y_train, sensor_id, this_sensor_dir_path, config, INPUT_LENGTH):
+def train_local_model(comm_round, global_weights, X_train, y_train, sensor_id, this_sensor_dir_path, config, INPUT_LENGTH, build_model):
     """train the local model 
 
     # Arguments
@@ -58,7 +59,7 @@ def train_local_model(comm_round, global_weights, X_train, y_train, sensor_id, t
         this_sensor_dir_path: specify directory to store related records for this sensor
         config: Dict, parameter for train.
     """
-    model = build_lstm([INPUT_LENGTH, 64, 64, 1])
+    model = build_model([INPUT_LENGTH, 64, 64, 1])
     model.compile(loss="mse", optimizer="rmsprop", metrics=['mape'])
     model.set_weights(global_weights)
     hist = model.fit(
