@@ -3,6 +3,7 @@
 import os
 from os import listdir
 from os.path import isfile, join
+from pathlib import Path
 import sys
 from datetime import datetime
 import math
@@ -36,7 +37,7 @@ args = args.__dict__
 dataset_path = args['data_path']
 
 if args["resume_path"]:
-	with open(f"{args['resume_path']}/vars_record.pkl", 'wb') as f:
+	with open(f"{str(Path(args['resume_path']).parent.absolute())}/vars_record.pkl", 'wb') as f:
 		vars_record = pickle.load(f)
 	model_chosen = vars_record['model']
 	pretrain_config = vars_record['pretrain_config']
