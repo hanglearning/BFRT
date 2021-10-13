@@ -48,12 +48,6 @@ else:
 	vars_record = {}
 	model_chosen = args['model']
 	vars_record['model'] = model_chosen
-	if model_chosen == 'lstm':
-		build_model = build_lstm
-	elif model_chosen == 'gru':
-		build_model = build_gru
-	else:
-		sys.exit(f"Model specification error - must be 'lstm' or 'gru', but got {args['model']}.")
 	
 	pretrain_config = {"batch": args['batch'], "epochs":  args['epoch']}
 	pretrain_percentage = args['pretrain_percentage']
@@ -67,6 +61,13 @@ else:
 	os.makedirs(log_files_folder_path, exist_ok=True)
 	with open(f"{log_files_folder_path}/vars_record.pkl", 'wb') as f:
 		pickle.dump(vars_record, f)
+
+if model_chosen == 'lstm':
+	build_model = build_lstm
+elif model_chosen == 'gru':
+	build_model = build_gru
+else:
+	sys.exit(f"Model specification error - must be 'lstm' or 'gru', but got {args['model']}.")
 
 def build_pretrain_dataset(pretrain_percentage, INPUT_LENGTH, all_sensor_files, dataset_path):
   
