@@ -143,10 +143,12 @@ def run_pretrain(log_files_folder_path, pretrain_config, pretrain_percentage, al
 	  model_file_path = resume_path
 	  [*_, starting_epoch, seq] = resume_path.split(".")[-2].split("_")
 	  starting_epoch = int(starting_epoch)
-	  seq = int(seq) + 1
 	  if seq == len(processed_pretrain_datasets):
 		  starting_epoch += 1
 		  seq = 1
+	  else:
+	  	seq = int(seq) + 1
+	  
   # begin training
   for epoch in range(starting_epoch, pretrain_config["epochs"] + 1):
 	  iter_control = range(seq - 1, len(processed_pretrain_datasets))
