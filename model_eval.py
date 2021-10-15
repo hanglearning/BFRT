@@ -47,7 +47,7 @@ for sensor_file in all_sensor_files:
     # read data
     data_index = int((num_lines - 1) * (1 - args['test_percent']))
     test_data = pd.read_csv(file_path, skiprows = data_index, encoding='utf-8').fillna(0)
-    _, _, X_test, y_test, scaler = process_data(np.empty(0), test_data, False, INPUT_LENGTH)
+    _, _, X_test, y_test, scaler = process_data(None, test_data, False, INPUT_LENGTH)
     X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
     predictions = the_model.predict(X_test)
     y_test = scaler.inverse_transform(y_test.reshape(-1, 1)).reshape(1, -1)[0]
