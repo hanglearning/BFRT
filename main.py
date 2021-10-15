@@ -27,12 +27,15 @@ parser.add_argument('-e', '--epoch', type=int, default=20, help='epoch number pe
 parser.add_argument('-c', '--comm_rounds', type=int, default=240, help='number of comm rounds')
 parser.add_argument('-m', '--model', type=str, default='lstm', help='Model to choose - lstm or gru')
 parser.add_argument('-pre', '--pretrained_path', type=str, default=None, help='The pretrained model log path')
+parser.add_argument('-ne', '--network_neurons', type=int, default=128, help='number of neurons in 2 layers')
 
 
 args = parser.parse_args()
 args = args.__dict__
 
 dataset_path = args['data_path']
+
+network_neurons = args['network_neurons']
 
 # determine if resume training
 resume_training = False
@@ -180,7 +183,7 @@ else:
 			baseline_model = load_model(pretrained_model_file_path)
 			model_file_path = pretrained_model_file_path
 		else:
-			baseline_model = build_model([INPUT_LENGTH, 64, 64, 1])
+			baseline_model = build_model([INPUT_LENGTH, network_neurons, network_neurons, 1])
 			model_file_path = f'{this_sensor_h5_baseline_model_path}/{sensor_id}_baseline_0.h5'
 			baseline_model.save(model_file_path)
 		baseline_models[sensor_file] = {}
@@ -192,7 +195,7 @@ else:
 		print("Starting FL with the pretrained model...")
 		global_model = load_model(pretrained_model_file_path)
 	else:
-		global_model = build_model([INPUT_LENGTH, 64, 64, 1])
+		global_model = build_model([INPUT_LENGTH, network_neurons, network_neurons, 1])
 		global_model.compile(loss="mse", optimizer="rmsprop", metrics=['mape'])
 		global_model_file_path = f'{log_files_folder_path}/globals/h5'
 		os.makedirs(global_model_file_path, exist_ok=True)
@@ -296,7 +299,8 @@ for round in range(STARTING_ROUND, communication_rounds + 1):
 		baseline_models[sensor_file]['model_file_path'] = new_baseline_model_path
 		# train local model
 		print(f"{sensor_id} training local model..")
-		new_local_model_path, new_local_model_weights = train_local_model(round, global_weights, X_train, y_train, sensor_id, baseline_models[sensor_file]['this_sensor_dir_path'], fl_config, INPUT_LENGTH, build_model)  
+		model = build_model([INPUT_LENGTH, network_neurons, network_neurons, 1])
+		new_local_model_path, new_local_model_weights = train_local_model(model, round, global_weights, X_train, y_train, sensor_id, baseline_models[sensor_file]['this_sensor_dir_path'], fl_config, INPUT_LENGTH, build_model)  
 		# record local model
 		local_model_weights.append(new_local_model_weights)
 

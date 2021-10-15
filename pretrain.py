@@ -30,11 +30,13 @@ parser.add_argument('-p', '--pretrain_percentage', type=float, default=1.00, hel
 parser.add_argument('-b', '--batch', type=int, default=256, help='batch number for the pretrain dataset')
 parser.add_argument('-e', '--epoch', type=int, default=150, help='epoch number for pretrain')
 parser.add_argument('-m', '--model', type=str, default='lstm', help='Model to choose - lstm or gru')
+parser.add_argument('-ne', '--network_neurons', type=int, default=128, help='number of neurons in 2 layers')
 
 args = parser.parse_args()
 args = args.__dict__
 
 dataset_path = args['data_path']
+network_neurons = args['network_neurons']
 
 if args["resume_path"]:
 	log_files_folder_path = str(Path(args['resume_path']).parent.absolute())
@@ -135,7 +137,7 @@ def run_pretrain(log_files_folder_path, pretrain_config, pretrain_percentage, al
 	  X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
 	  processed_pretrain_datasets.append((sensor_file, X_train, y_train))
   # build pretrain model
-  model_to_pretrain = build_model([INPUT_LENGTH, 64, 64, 1])
+  model_to_pretrain = build_model([INPUT_LENGTH, network_neurons, network_neurons, 1])
   model_to_pretrain.compile(loss="mse", optimizer="rmsprop", metrics=['mape'])
   if not resume_path:
 	  model_file_path = f'{log_files_folder_path}/pretrain_0.h5'
