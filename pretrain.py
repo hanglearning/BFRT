@@ -84,7 +84,10 @@ def build_pretrain_dataset(pretrain_percentage, INPUT_LENGTH, all_sensor_files, 
 	  reader = csv.reader(file)
 	  num_lines = len(list(reader))
 	  # read data - multiplies of INPUT_LENGTH within the pretrain_percentage of data
-	  data_index = int(math.floor( (num_lines-1) // INPUT_LENGTH * pretrain_percentage )*INPUT_LENGTH)
+	  # data_index = int(math.floor( (num_lines-1) // INPUT_LENGTH * pretrain_percentage )*INPUT_LENGTH)
+	  if num_lines < INPUT_LENGTH:
+		  sys.exit(f'Sample count({num_lines-1}) cannot be less than the INPUT_LENGTH({INPUT_LENGTH}) of the NN model.')
+	  data_index = int((num_lines-1) * pretrain_percentage)
 	  pretrain_data = pd.read_csv(file_path, nrows = data_index, encoding='utf-8').fillna(0)
 	  post_pretrain_data_index[sensor_file] = data_index
 	  pretrain_datasets.append((sensor_file, pretrain_data))
