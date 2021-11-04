@@ -38,6 +38,30 @@ def process_pretrain_data(df_train, INPUT_LENGTH):
     return X_train, y_train
 
 
+def process_pretrain_data_multi(df_train, INPUT_LENGTH, num_last_layer_neurons):
+    """Process data
+
+    # Arguments
+        df_train: pandas data frame, trainig data.
+    # Returns
+        X_train: ndarray.
+        y_train: ndarray.
+    """
+
+    scaler = MinMaxScaler(feature_range=(0, 1)).fit(df_train[attr].values.reshape(-1, 1))
+    flow_train = scaler.transform(df_train[attr].values.reshape(-1, 1)).reshape(1, -1)[0]
+
+    train_set, test_set = [], []
+    for i in range(INPUT_LENGTH, len(flow_train) - (num_last_layer_neurons - 1)):
+        train_set.append(flow_train[i - INPUT_LENGTH: i + num_last_layer_neurons])
+
+    train = np.array(train_set)
+    
+    X_train = train[:, :-num_last_layer_neurons]
+    y_train = train[:, -num_last_layer_neurons:]
+
+    return X_train, y_train
+
 def process_data(df_train, df_test, is_chained, INPUT_LENGTH):
     """Process data
     # Arguments
@@ -76,5 +100,30 @@ def process_data(df_train, df_test, is_chained, INPUT_LENGTH):
     else:
         X_test = test[:, :-1]
         y_test = test[:, -1]
+
+    return X_train, y_train, X_test, y_test, scaler
+
+def process_data_multi(df_train, df_test, is_chained, INPUT_LENGTH, num_last_layer_neurons):
+
+    scaler = MinMaxScaler(feature_range=(0, 1)).fit(df_train[attr].values.reshape(-1, 1))
+    X_train, y_train, X_test, y_test = None, None, None, None
+
+    flow_train = scaler.transform(df_train[attr].values.reshape(-1, 1)).reshape(1, -1)[0]
+    train_set = []
+    for i in range(INPUT_LENGTH, len(flow_train) - (num_last_layer_neurons - 1)):
+        train_set.append(flow_train[i - INPUT_LENGTH: i + num_last_layer_neurons])
+    train = np.array(train_set)
+    X_train = train[:, :-num_last_layer_neurons]
+    y_train = train[:, -num_last_layer_neurons:]
+    
+    flow_test = scaler.transform(df_test[attr].values.reshape(-1, 1)).reshape(1, -1)[0]
+    test_set = []
+    
+    for i in range(INPUT_LENGTH, len(flow_test) - (num_last_layer_neurons - 1)):
+            test_set.append(flow_test[i - INPUT_LENGTH: i + num_last_layer_neurons])
+    test = np.array(test_set) 
+    
+    X_test = test[:, :-num_last_layer_neurons]
+    y_test = test[:, -num_last_layer_neurons:]
 
     return X_train, y_train, X_test, y_test, scaler

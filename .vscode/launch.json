@@ -1,0 +1,16 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "pretrain.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/pretrain.py",
+            "console": "integratedTerminal",
+            "args": ["-dp", "/Users/chenhang/Documents/Working/traffic_fedavg/Preprocessed_V1.1_4sensors", "-log", "/Users/chenhang/Documents/Working/traffic_fedavg/logs"]
+        }
+    ]
+}

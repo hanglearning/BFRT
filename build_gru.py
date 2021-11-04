@@ -5,7 +5,6 @@ from keras.layers import Dense, Dropout, Activation
 from keras.layers.recurrent import GRU
 from keras.models import Sequential
 
-
 def build_gru(units):
     """GRU(Gated Recurrent Unit)
     Build GRU Model.
