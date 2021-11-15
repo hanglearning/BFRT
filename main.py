@@ -7,52 +7,70 @@ import pandas as pd
 from datetime import datetime
 import pickle
 import argparse
+from copy import deepcopy
 
 from keras.models import load_model
 
 from build_lstm import build_lstm
 from build_gru import build_gru
-from process_data import process_data
 from model_training import train_baseline_model
 from model_training import train_local_model
 from chain_predict import chain_predict
 
+from process_data import get_scaler
+from process_data import process_train_data_single
+from process_data import process_train_data_multi
+from process_data import process_test_one_step
+from process_data import process_test_chained
+from process_data import process_test_multi_and_get_y_true
+
+''' Parse command line arguments '''
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description="traffic_fedavg_simulation")
 
+# arguments for system vars
+parser.add_argument('-dp', '--dataset_path', type=str, default='/content/drive/MyDrive/Traffic Prediction FedAvg Simulation/traffic_data/Preprocessed_V1.1_4sensors', help='dataset path')
+parser.add_argument('-lb', '--logs_base_folder', type=str, default="/content/drive/MyDrive/Traffic Prediction FedAvg Simulation/device_outputs_Preprocessed_V1.1", help='base folder path to store running logs and h5 files')
+
+# arguments for resume training
 parser.add_argument('-rp', '--resume_path', type=str, default=None, help='provide the leftover log folder path to continue FL')
-parser.add_argument('-il', '--input_length', type=int, default=12, help='input length for the LSTM network')
-parser.add_argument('-dp', '--data_path', type=str, default='/content/drive/MyDrive/Traffic Prediction FedAvg Simulation/traffic_data/Preprocessed_V1.1_4sensors', help='dataset path')
-parser.add_argument('-b', '--batch', type=int, default=1, help='batch number for FL')
-parser.add_argument('-e', '--epoch', type=int, default=20, help='epoch number per comm round for FL')
-parser.add_argument('-c', '--comm_rounds', type=int, default=240, help='number of comm rounds')
+
+# arguments for pretrained models
+parser.add_argument('-sp', '--single_output_pretrained_path', type=str, default=None, help='The single-output pretrained model file path')
+parser.add_argument('-mp', '--multi_output_pretrained_path', type=str, default=None, help='The multi-output pretrained model file path')
+
+# arguments for learning
 parser.add_argument('-m', '--model', type=str, default='lstm', help='Model to choose - lstm or gru')
-parser.add_argument('-pre', '--pretrained_path', type=str, default=None, help='The pretrained model log path')
-parser.add_argument('-ne', '--network_neurons', type=int, default=128, help='number of neurons in 2 layers')
+parser.add_argument('-il', '--input_length', type=int, default=12, help='input length for the LSTM network')
+parser.add_argument('-hn', '--hidden_neurons', type=int, default=128, help='number of neurons in 2 layers')
+parser.add_argument('-b', '--batch', type=int, default=1, help='batch number for training')
+parser.add_argument('-es', '--epochs_single', type=int, default=5, help='epoch number for models with single output per comm round for FL')
+parser.add_argument('-em', '--epochs_multi', type=int, default=5, help='epoch number for models with multiple output per comm round for FL')
+parser.add_argument('-ff', '--num_feedforward', type=int, default=12, help='number of feedforward predictions, used to set up the number of the last layer of the model and the number of chained predictions (usually it has to be equal to -il)')
+
+# arguments for federated learning
+parser.add_argument('-c', '--comm_rounds', type=int, default=240, help='number of comm rounds')
+parser.add_argument('-ml', '--max_data_length', type=int, default=72, help='maximum data length for training in each communication round, simulating a memory a sensor has')
 
 
 args = parser.parse_args()
 args = args.__dict__
 
-dataset_path = args['data_path']
-
-network_neurons = args['network_neurons']
+''' Parse command line arguments '''
 
 # determine if resume training
-resume_training = False
 if args['resume_path']:
-	resume_training = True
-	log_files_folder_path = args['resume_path']
+	logs_dirpath = args['resume_path']
+	# load config variables
+	with open(f"{logs_dirpath}/config_vars.pkl", 'rb') as f:
+		config_vars = pickle.load(f)
 else:
 	''' Global Variables Set Up '''
 
-	INPUT_LENGTH = args['input_length']
-
 	# create log folder indicating by current running date and time
 	date_time = datetime.now().strftime("%m%d%Y_%H%M%S")
-	log_files_folder_path = f"/content/drive/MyDrive/Traffic Prediction FedAvg Simulation/device_outputs_Preprocessed_V1.1/{date_time}_{args['model']}"
-
+	logs_dirpath = f"{args['logs_base_folder']}/{date_time}_{args['model']}_{args['input_length']}"
+	os.makedirs(logs_dirpath, exist_ok=True)
 	# FL config
-
 	model_chosen = args['model']
 	if model_chosen == 'lstm':
 		build_model = build_lstm
@@ -61,23 +79,21 @@ else:
 	else:
 		sys.exit(f"Model specification error - must be 'lstm' or 'gru', but got {args['model']}.")
 	
-	fl_config = {"batch": args['batch'], "epochs":  args['epoch']}
-	communication_rounds = args['comm_rounds'] # 1 comm round = 1 hour
-
-	vars_record = {} # to be stored and used for resuming training
-	vars_record["model_chosen"] = model_chosen
-	vars_record["INPUT_LENGTH"] = INPUT_LENGTH
-	vars_record["dataset_path"] = dataset_path
-	vars_record["fl_config"] = fl_config
-	vars_record["communication_rounds"] = communication_rounds
-
+	# save command line arguments
+	config_vars = args
+	
 	""" Import data files (csv) """
 
 	# Get all available files named by sensor ids with .csv extension
 
-	all_sensor_files = [f for f in listdir(dataset_path) if isfile(join(dataset_path, f)) and '.csv' in f]
+	all_sensor_files = [f for f in listdir(args["dataset_path"]) if isfile(join(args["dataset_path"], f)) and '.csv' in f]
 	print(f'We have {len(all_sensor_files)} sensors available.')
-	vars_record["all_sensor_files"] = all_sensor_files
+	
+	config_vars["all_sensor_files"] = all_sensor_files
+	config_vars['logs_dirpath'] = logs_dirpath
+	# save config_vars for resuming training
+	with open(f"{logs_dirpath}/config_vars.pkl", 'wb') as f:
+		pickle.dump(config_vars, f)
 
 ''' Global Variables Set Up (END)'''
 
@@ -90,277 +106,353 @@ RUN THIS FUNCTION IN pretrain.py
 
 """ Main functions for learning and predictions
 
-(1) Data input of the learning process for both chained predictions and 1-step look_ahead prediction (as a baseline to compare with the errors from chained predictions).
-
-Round 1 - Train on 1\~12 to learn the 13th point, so training set 1\~13
-
-Round 2 - Train on 1\~24, learn 13th, 14th ... 24th
-
-Round 3 - Train on 13\~36, learn 25th, 26th ... 36th
-
-(2) Data input of the chained prediction process
-
-Round 1 - Test on 13\~24
-
-Round 2 - Test on 25\~36
-
-Round 3 - Test on 37\~38
-
-(3) Data input of the 1-step look_ahead prediction process
-
-Round 1 - Testset input 1\~24 to predict on 13\~24
-
-Round 2 - Testset input 13\~36 to predict on 25\~36
-
-Round 3 - Testset input 25\~48 to predict on 37\~48
-
 NOTE - Naive iterating over data. Will not deal with potential repeated or missing data.
 
 """
 
-STARTING_ROUND = 1
-if resume_training:
-	with open(f"{log_files_folder_path}/vars_record.pkl", 'rb') as f:
-		vars_record = pickle.load(f)
-	dataset_path = vars_record["dataset_path"]
-	fl_config = vars_record["fl_config"]
-	communication_rounds = vars_record["communication_rounds"]
-	all_sensor_files = vars_record["all_sensor_files"]
-	starting_data_index = vars_record["starting_data_index"]
-	INPUT_LENGTH = vars_record["INPUT_LENGTH"]
-	created_time_column = vars_record["created_time_column"]
-	model_chosen = vars_record["model_chosen"]
-
+if args['resume_path']:
+	# resume training
+	with open(f"{logs_dirpath}/config_vars.pkl", 'rb') as f:
+		config_vars = pickle.load(f)
 	# init build_model function
-	if model_chosen == 'lstm':
-		build_model = build_lstm
-	elif model_chosen == 'gru':
-		build_model = build_gru
-
+	build_model = build_lstm if config_vars["model_chosen"] == 'lstm' else build_gru
 	# load starting round
-	with open(f'{log_files_folder_path}/rounds_done.txt', 'r') as f:
-		latest_round = int(f.readlines()[-1])
-		STARTING_ROUND = latest_round + 1
+	last_round = config_vars["last_round"]
+	# to make it easy, retrain the last epoch for all models
+	STARTING_ROUND = last_round
 	# load global model
-	global_model = load_model(f'{log_files_folder_path}/globals/round_{latest_round}.h5')
+	single_global_model = load_model(f'{logs_dirpath}/globals/single/round_{last_round}.h5')
+	multi_global_model = load_model(f'{logs_dirpath}/globals/multi/round_{last_round}.h5')
 	# load all_sensor_predicts
-	with open(f"{log_files_folder_path}/all_predicts.pkl", 'rb') as f:
+	with open(f"{logs_dirpath}/all_predicts.pkl", 'rb') as f:
 		sensor_predicts = pickle.load(f)
-	# load baseline models
-	with open(f'{log_files_folder_path}/baseline_model_paths.pkl', 'rb') as f:
+	# load baseline model paths
+	with open(f'{logs_dirpath}/baseline_model_paths.pkl', 'rb') as f:
 		baseline_models = pickle.load(f)
+	# load global model paths
+	with open(f'{logs_dirpath}/global_model_paths.pkl', 'rb') as f:
+		baseline_models = pickle.load(f)
+	# other exposed vars
+	whole_data_dict = config_vars["scaler"]
+	scaler = config_vars["scaler"]
 else:
-	# set specific pretrained model, or set it to None to not use a pretrained model
-	pretrained_model_file_path = None
-	if args['pretrained_path']:
-		pretrained_model_log_folder = args['pretrained_path']
-		# pretrained_model_log_folder = '/content/drive/MyDrive/Traffic Prediction FedAvg Simulation/device_outputs_Preprocessed_V1.1/08262021_181808_lstm'
-		pretrained_model_file_path = f'{pretrained_model_log_folder}/pretrain/pretrain.h5'
-	if pretrained_model_file_path:
-		if pretrained_model_log_folder[-1] != model_chosen[-1]:
-			sys.exit("Error - pretrained model is a different model from the model that will be trained.")
+	STARTING_ROUND = 1
+	# load pretrained models if specified
+	single_pretrained_model = args['single_output_pretrained_path']
+	multi_pretrained_model = args['multi_output_pretrained_path']
+	if single_pretrained_model and multi_pretrained_model:
+		pretrained_model_log_folder = str(single_pretrained_model.parent.absolute()) # or get it from multi_pretrained_model.parent.absolute()
 		with open(f"{pretrained_model_log_folder}/post_pretrain_data_index.pkl", 'rb') as f:
 			post_pretrain_data_index = pickle.load(f)
-	os.makedirs(f'{log_files_folder_path}/globals', exist_ok=True)
-
-	# tf.compat.v1.disable_v2_behavior() # model trained in tf1
-	# begin main function
-
-	# train, FedAvg, Prediction (simulating real-time training)
-
+		starting_data_index = post_pretrain_data_index[all_sensor_files[0]]
+	else:
+		print("Pretrained models read error/not provided. Training from scratch...")
+		starting_data_index = 0
+	# init global model
+	global_model_paths = {}
+	os.makedirs(f'{logs_dirpath}/globals', exist_ok=True)
+	# assign pretrained models if specified
+	if single_pretrained_model and multi_pretrained_model:
+		print("Starting FL with the pretrained models...")
+		single_global_model = load_model(single_pretrained_model)
+		multi_global_model = load_model(multi_pretrained_model)
+	else:
+		# single model
+		single_global_model = build_model([config_vars['input_length'], config_vars['hidden_neurons'], config_vars['hidden_neurons'], 1])
+		single_global_model.compile(loss="mse", optimizer="rmsprop", metrics=['mape'])
+		single_global_model_path = f'{logs_dirpath}/globals/single_h5'
+		os.makedirs(single_global_model_path, exist_ok=True)
+		single_global_model.save(f'{single_global_model_path}/comm_0.h5')
+		# multi model
+		multi_global_model = build_model([config_vars['input_length'], config_vars['hidden_neurons'], config_vars['hidden_neurons'], config_vars['num_feedforward']])
+		multi_global_model.compile(loss="mse", optimizer="rmsprop", metrics=['mape'])
+		multi_global_model_path = f'{logs_dirpath}/globals/multi_h5'
+		os.makedirs(multi_global_model_path, exist_ok=True)
+		multi_global_model.save(f'{multi_global_model_path}/comm_0.h5')
+		# record global models for easy access
+		# format global_model_paths[comm_round]["single" or "multi"]
+		global_model_paths[0] = {}
+		global_model_paths[0]["single"] = f'{single_global_model_path}/comm_0.h5'
+		global_model_paths[0]["multi"] = f'{multi_global_model_path}/comm_0.h5'
 	# init baseline models
 	baseline_models = {}
 	for sensor_file in all_sensor_files:
 		sensor_id = sensor_file.split('.')[0]
-		# create log directories for this sensor
-		this_sensor_dir_path = f'{log_files_folder_path}/{sensor_id}'
-		this_sensor_h5_baseline_model_path = f'{this_sensor_dir_path}/h5/baseline'
-		this_sensor_h5_local_model_path = f'{this_sensor_dir_path}/h5/local'
-		os.makedirs(this_sensor_h5_baseline_model_path, exist_ok=True)
-		os.makedirs(this_sensor_h5_local_model_path, exist_ok=True)
 		
-		if pretrained_model_file_path:
-			baseline_model = load_model(pretrained_model_file_path)
-			model_file_path = pretrained_model_file_path
+		# create log directories for this sensor
+		this_sensor_dirpath = f'{logs_dirpath}/{sensor_id}'
+		
+		# create log folders for baseline models
+		h5_single_baseline_dirpath = f'{this_sensor_dirpath}/baseline_single_h5'
+		h5_multi_baseline_dirpath = f'{this_sensor_dirpath}/baseline_multi_h5'
+		os.makedirs(h5_single_baseline_dirpath, exist_ok=True)
+		os.makedirs(h5_multi_baseline_dirpath, exist_ok=True)
+  
+		# create log folders for fl local models
+		h5_single_local_dirpath = f'{this_sensor_dirpath}/local_single_h5'
+		h5_multi_local_dirpath = f'{this_sensor_dirpath}/local_multi_h5'
+		os.makedirs(h5_single_local_dirpath, exist_ok=True)
+		os.makedirs(h5_multi_local_dirpath, exist_ok=True)
+		
+		# init baseline models
+		# assign pretrained models if specified
+		if single_pretrained_model and multi_pretrained_model:
+			single_baseline_model = load_model(single_pretrained_model)
+			multi_baseline_model = load_model(multi_pretrained_model)
 		else:
-			baseline_model = build_model([INPUT_LENGTH, network_neurons, network_neurons, 1])
-			model_file_path = f'{this_sensor_h5_baseline_model_path}/{sensor_id}_baseline_0.h5'
-			baseline_model.save(model_file_path)
+			# create new models
+			# single_baseline_model = build_model([config_vars['input_length'], config_vars['hidden_neurons'], config_vars['hidden_neurons'], 1])
+			# single_baseline_model.compile(loss="mse", optimizer="rmsprop", metrics=['mape'])
+			single_baseline_model = deepcopy(single_global_model)
+ 			# multi_baseline_model = build_model([config_vars['input_length'], config_vars['hidden_neurons'], config_vars['hidden_neurons'], config_vars['num_feedforward']])
+			# multi_baseline_model.compile(loss="mse", optimizer="rmsprop", metrics=['mape'])
+			multi_baseline_model = deepcopy(multi_global_model)
+	  
+			single_baseline_model_path = f'{h5_single_baseline_dirpath}/comm_0.h5'
+			single_baseline_model.save(single_baseline_model_path)
+			multi_baseline_model_path = f'{h5_multi_baseline_dirpath}/comm_0.h5'
+			multi_baseline_model.save(multi_baseline_model_path)
+		# record baseline models for easy access
 		baseline_models[sensor_file] = {}
-		baseline_models[sensor_file]['model_file_path'] = model_file_path
-		baseline_models[sensor_file]['this_sensor_dir_path'] = this_sensor_dir_path
+		baseline_models[sensor_file]['single_baseline_model_path'] = single_baseline_model_path
+		baseline_models[sensor_file]['multi_baseline_model_path'] = multi_baseline_model_path
+		baseline_models[sensor_file]['this_sensor_dirpath'] = this_sensor_dirpath
 
-	# init global model
-	if pretrained_model_file_path:
-		print("Starting FL with the pretrained model...")
-		global_model = load_model(pretrained_model_file_path)
-	else:
-		global_model = build_model([INPUT_LENGTH, network_neurons, network_neurons, 1])
-		global_model.compile(loss="mse", optimizer="rmsprop", metrics=['mape'])
-		global_model_file_path = f'{log_files_folder_path}/globals/h5'
-		os.makedirs(global_model_file_path, exist_ok=True)
-		global_model.save(f'{global_model_file_path}/comm_0.h5')
-
+	
 	# init prediction records
 	sensor_predicts = {}
 	for sensor_file in all_sensor_files:
 		sensor_predicts[sensor_file] = {}
-		sensor_predicts[sensor_file]['baseline_chained'] = []
-		sensor_predicts[sensor_file]['local_chained'] = []
-		sensor_predicts[sensor_file]['global_chained'] = []
+		# baseline - centralized
 		sensor_predicts[sensor_file]['baseline_onestep'] = []
-		sensor_predicts[sensor_file]['local_onestep'] = []
+		sensor_predicts[sensor_file]['baseline_chained'] = []
+		sensor_predicts[sensor_file]['baseline_multi'] = []
+		# local
+		# sensor_predicts[sensor_file]['local_single'] = []
+		# sensor_predicts[sensor_file]['local_chained'] = []
+		# sensor_predicts[sensor_file]['local_multi'] = []
+		# global
 		sensor_predicts[sensor_file]['global_onestep'] = []
+		sensor_predicts[sensor_file]['global_chained'] = []
+		sensor_predicts[sensor_file]['global_multi'] = []
+		# true
 		sensor_predicts[sensor_file]['true'] = []
 
 	# use the first sensor data created_time as the standard to ease simulation data slicing
-	file_path = os.path.join(dataset_path, all_sensor_files[0])
+	file_path = os.path.join(args['dataset_path'], all_sensor_files[0])
 	created_time_column = pd.read_csv(file_path, encoding='utf-8').fillna(0)['created_time']
+		
+	config_vars["created_time_column"] = created_time_column
+	config_vars["starting_data_index"] = starting_data_index
 
-	if pretrained_model_file_path:
-		starting_data_index = post_pretrain_data_index[all_sensor_files[0]]
-	else:
-		starting_data_index = 0
-	vars_record["created_time_column"] = created_time_column
-	vars_record["starting_data_index"] = starting_data_index
+	# read whole data for each sensor
+	whole_data_dict = {}
+	whole_data_list = []
+	for sensor_file in all_sensor_files:
+		# data file path
+		file_path = os.path.join(config_vars['dataset_path'], sensor_file)
+		# read data
+		whole_data = pd.read_csv(file_path, encoding='utf-8').fillna(0)
+		whole_data_dict[sensor_file] = whole_data
+		whole_data_list.append(whole_data)
+	config_vars["whole_data_dict"] = whole_data_dict
+	# get scaler
+	# TODO - test if whole, and, get scaler from pretraining??
+	scaler = get_scaler(pd.concat(whole_data_list))
+	config_vars["scaler"] = scaler
 	# store training config
-	with open(f"{log_files_folder_path}/vars_record.pkl", 'wb') as f:
-		pickle.dump(vars_record, f)
-
+	with open(f"{logs_dirpath}/config_vars.pkl", 'wb') as f:
+		pickle.dump(config_vars, f)
+  
 # print("starting_data_index", starting_data_index)
 
 # init FedAvg vars
-sample_size_each_communication_round = INPUT_LENGTH 
+INPUT_LENGTH = config_vars['input_length']
+new_sample_size_per_comm_round = INPUT_LENGTH
 
-for round in range(STARTING_ROUND, communication_rounds + 1):
-	local_model_weights = []
-	global_weights = global_model.get_weights()
+
+# tf.compat.v1.disable_v2_behavior() # model trained in tf1    
+''' Local Training, FedAvg, Prediction (simulating real-time FedAvg) '''
+# one comm round -> feed in one hour of new data (5 min resolution) if input_length = 12
+for round in range(STARTING_ROUND, config_vars["comm_rounds"] + 1):
+	single_local_model_weights = []
+	multi_local_model_weights = []
+	single_global_weights = single_global_model.get_weights()
+	multi_global_weights = multi_global_model.get_weights()
 	print(f"Simulating comm round {round}...")
-	if round == 1:
-		training_data_starting_index = starting_data_index
-	else:
-		training_data_starting_index = starting_data_index + (round - 2) * sample_size_each_communication_round
-	starting_created_time = created_time_column.iloc[training_data_starting_index]
+	# starting_created_time = created_time_column.iloc[training_data_starting_index] # now we assume data is preprocessed
 	X_train_records = {}
 	X_test_records = {}
 	for sensor_file in all_sensor_files:
 		sensor_id = sensor_file.split('.')[0]
 		
-		''' processing data '''
-		# data file path
-		file_path = os.path.join(dataset_path, sensor_file)
-		# read data
-		whole_data = pd.read_csv(file_path, encoding='utf-8').fillna(0)
-		# get training data slicing indexes
-		# try:
-			# training_data_starting_index = whole_data[whole_data['created_time'] == starting_created_time].index[0]
-			# change it to naively iterate csv dates
-		# except:
-		#   print(f"Data error - Sensor {sensor_id} does not have the row with created_time {starting_created_time}.")
-		#   # sys.exit(0)
-		#   continue
+		''' Process traning data '''
 		if round == 1:
-			training_data_ending_index = training_data_starting_index + sample_size_each_communication_round
+			training_data_starting_index = starting_data_index
+			training_data_ending_index = training_data_starting_index + new_sample_size_per_comm_round * 2 - 1
 		else:
-			training_data_ending_index = training_data_starting_index + sample_size_each_communication_round * 2 - 1
+			# 1- 24， 2 - 36， 3 - 48， 4 - 60
+			training_data_ending_index = (round + 1) * new_sample_size_per_comm_round
+			training_data_starting_index = training_data_ending_index - config_vars['max_data_length']
+			if training_data_starting_index < 1:
+				training_data_starting_index = 1
+		whole_data = whole_data_dict[sensor_file]
+		# slice training data
+		train_data = whole_data[training_data_starting_index: training_data_ending_index + 1]
 
+		# process training data
+		X_train_single, y_train_single = process_train_data_single(train_data, scaler, INPUT_LENGTH)
+		X_train_multi, y_train_multi = process_train_data_multi(train_data, scaler, INPUT_LENGTH, config_vars['num_feedforward'])
+  
 		debug_text = f"DEBUG INFO: {sensor_id} now uses its own data starting at {training_data_starting_index} to {training_data_ending_index}\n"
 		print(debug_text)
 		
-		# get test data slicing indexes
-		# only use the labels of the test data to compare with chained (feed-forward) predictions
-		if round == 1:
-			chained_test_data_starting_index = training_data_ending_index
-			onestep_test_data_starting_index = training_data_starting_index
-		else:
-			chained_test_data_starting_index = training_data_ending_index + 1
-			onestep_test_data_starting_index = training_data_starting_index + sample_size_each_communication_round
-		chained_test_data_ending_index = chained_test_data_starting_index + sample_size_each_communication_round - 1
-		onestep_test_data_ending_index = onestep_test_data_starting_index + sample_size_each_communication_round * 2 - 1
-		# slice training data
-		train_data = whole_data[training_data_starting_index: training_data_ending_index + 1]
-		# slice test data (the next sample_size_each_communication_round amount of data)
-		chained_test_data = whole_data[chained_test_data_starting_index: chained_test_data_ending_index + 1]
-		onestep_test_data = whole_data[onestep_test_data_starting_index: onestep_test_data_ending_index + 1]
-		# process data
-		# X_test won't be used in chained predictions
-		X_train, y_train, _, y_test, scaler = process_data(train_data, chained_test_data, True, INPUT_LENGTH)
-		X_train, y_train, X_test_onestep, y_test_onestep, scaler = process_data(train_data, onestep_test_data, False, INPUT_LENGTH)
-		X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
-		X_test_onestep = np.reshape(X_test_onestep, (X_test_onestep.shape[0], X_test_onestep.shape[1], 1))
-		X_train_records[sensor_file] = X_train
-		X_test_records[sensor_file] = X_test_onestep
+		''' Process test data '''
+		
+		test_data_starting_index = training_data_ending_index - new_sample_size_per_comm_round + 1
+		test_data_ending_index_one_step = test_data_starting_index + new_sample_size_per_comm_round * 2 - 1
+		test_data_ending_index_chained_multi = test_data_starting_index + new_sample_size_per_comm_round - 1
+		
+		# slice test data
+		# test_data_onestep_multi is used for the one_step model
+		# test_data_chained is used for the chained and the multi-output models
+		test_data_onestep_multi = whole_data[test_data_starting_index: test_data_ending_index_one_step + 1]
+		test_data_chained = whole_data[test_data_starting_index: test_data_ending_index_chained_multi + 1]
 
+		# process data
+		X_test_onestep = process_test_one_step(test_data_onestep_multi, scaler, INPUT_LENGTH)
+		X_test_chained = process_test_chained(test_data_chained, scaler, INPUT_LENGTH)
+		X_test_multi, y_true = process_test_multi_and_get_y_true(test_data_onestep_multi, scaler, INPUT_LENGTH, config_vars['num_feedforward'])
+
+		''' reshape data '''
+		for train_data in ['X_train_single', 'X_train_multi', 'X_test_onestep', 'X_test_chained', 'X_test_multi']:
+			vars()[train_data] = np.reshape(vars()[train_data], (vars()[train_data].shape[0], vars()[train_data].shape[1], 1))
+		# X_train_single = np.reshape(X_train_single, (X_train_single.shape[0], X_train_single.shape[1], 1))
+		# X_train_multi = np.reshape(X_train_multi, (X_train_multi.shape[0], X_train_multi.shape[1], 1))
+		# X_test_onestep = np.reshape(X_test_onestep, (X_test_onestep.shape[0], X_test_onestep.shape[1], 1))
+		# X_test_chained = np.reshape(X_test_chained, (X_test_chained.shape[0], X_test_chained.shape[1], 1))
+		# X_test_multi = np.reshape(X_test_multi, (X_test_multi.shape[0], X_test_multi.shape[1], 1))
+  
+	
+		X_train_records[sensor_file] = {}
+		X_train_records[sensor_file]['X_train_single'] = X_train_single
+		X_train_records[sensor_file]['X_train_multi'] = X_train_multi
+		X_test_records[sensor_file] = {}
+		X_test_records[sensor_file]['X_test_onestep'] = X_test_onestep
+		X_test_records[sensor_file]['X_test_chained'] = X_test_chained
+		X_test_records[sensor_file]['X_test_multi'] = X_test_multi
+		
 		''' begin training '''
 		print(f"{sensor_id} now training on row {training_data_starting_index} to {training_data_ending_index}...")
-		# train baseline model
-		print(f"{sensor_id} training baseline model..")
-		new_baseline_model_path = train_baseline_model(round, baseline_models[sensor_file]['model_file_path'], X_train, y_train, sensor_id, baseline_models[sensor_file]['this_sensor_dir_path'], fl_config)
-		baseline_models[sensor_file]['model_file_path'] = new_baseline_model_path
-		# train local model
-		print(f"{sensor_id} training local model..")
-		model = build_model([INPUT_LENGTH, network_neurons, network_neurons, 1])
-		new_local_model_path, new_local_model_weights = train_local_model(model, round, global_weights, X_train, y_train, sensor_id, baseline_models[sensor_file]['this_sensor_dir_path'], fl_config, INPUT_LENGTH, build_model)  
+		
+		''' train baseline model '''
+		# single model
+		print(f"{sensor_id} training single baseline model.. (1/4)")
+		the_model = load_model(baseline_models[sensor_file]['single_baseline_model_path'])
+		new_single_baseline_model_path = train_baseline_model(the_model, round, X_train_single, y_train_single, sensor_id, baseline_models[sensor_file]['this_sensor_dirpath'], "single", config_vars['batch'], config_vars['epochs_single'])
+		# multi model
+		print(f"{sensor_id} training multi baseline model.. (2/4)")
+		the_model = load_model(baseline_models[sensor_file]['multi_baseline_model_path'])
+		new_multi_baseline_model_path = train_baseline_model(the_model, round, X_train_multi, y_train_multi, sensor_id, baseline_models[sensor_file]['this_sensor_dirpath'], "multi", config_vars['batch'], config_vars['epochs_multi'])
+		# record new baseline model paths
+		baseline_models[sensor_file]['single_baseline_model_path'] = new_single_baseline_model_path
+		baseline_models[sensor_file]['multi_baseline_model_path'] = new_multi_baseline_model_path
+		
+		''' train local model '''
+		# single model
+		print(f"{sensor_id} training single local model.. (3/4)")
+		local_model = load_model(global_model_paths[round-1]["single"])
+		new_single_local_model_path, new_single_local_model_weights = train_local_model(local_model, round, X_train_single, y_train_single, sensor_id, baseline_models[sensor_file]['this_sensor_dirpath'], "single", config_vars['batch'], config_vars['epochs_single'])
+		# multi model
+		print(f"{sensor_id} training multi local model.. (4/4)")
+		local_model = load_model(global_model_paths[round-1]["multi"])
+		new_multi_local_model_path, new_multi_local_model_weights = train_local_model(local_model, round, X_train_multi, y_train_multi, sensor_id, baseline_models[sensor_file]['this_sensor_dirpath'], "multi", config_vars['batch'], config_vars['epochs_multi'])
 		# record local model
-		local_model_weights.append(new_local_model_weights)
-
-		''' predictions '''
-		print(f"{sensor_id} now predicting on 3 models...")
-		baseline_model = load_model(new_baseline_model_path)
-		local_model = load_model(new_local_model_path)
-		''' Onestep predictions '''
-		baseline_predicted = baseline_model.predict(X_test_onestep)
-		baseline_predicted = scaler.inverse_transform(baseline_predicted.reshape(-1, 1)).reshape(1, -1)[0]
-		local_predicted = local_model.predict(X_test_onestep)
-		local_predicted = scaler.inverse_transform(local_predicted.reshape(-1, 1)).reshape(1, -1)[0]
-		sensor_predicts[sensor_file]['baseline_onestep'].append((round,baseline_predicted))
-		sensor_predicts[sensor_file]['local_onestep'].append((round,local_predicted))
-		''' chain predictions '''
-		baseline_predicted = chain_predict(baseline_model, X_train, INPUT_LENGTH)
-		baseline_predicted = scaler.inverse_transform(baseline_predicted.reshape(-1, 1)).reshape(1, -1)[0]
-		local_predicted = chain_predict(local_model, X_train, INPUT_LENGTH)
-		local_predicted = scaler.inverse_transform(local_predicted.reshape(-1, 1)).reshape(1, -1)[0]
-		sensor_predicts[sensor_file]['baseline_chained'].append((round,baseline_predicted))
-		sensor_predicts[sensor_file]['local_chained'].append((round,local_predicted))
+		single_local_model_weights.append(new_single_local_model_weights)
+		multi_local_model_weights.append(new_multi_local_model_weights)
+		''' baseline model predictions ''' # removed local models
+		# load models
+		single_baseline_model = load_model(new_single_baseline_model_path)
+		multi_baseline_model = load_model(new_multi_baseline_model_path)
+		''' (Single-output) Onestep Predictions '''
+		print(f"{sensor_id} now predicting by its single baseline model (1/3)...")
+		onestep_baseline_predictions = single_baseline_model.predict(X_test_onestep)
+		onestep_baseline_predictions = scaler.inverse_transform(onestep_baseline_predictions.reshape(-1, 1)).reshape(1, -1)[0]
+		sensor_predicts[sensor_file]['baseline_onestep'].append((round,onestep_baseline_predictions))
+		# local_predicted = local_model.predict(X_test_single)
+		# local_predicted = scaler.inverse_transform(local_predicted.reshape(-1, 1)).reshape(1, -1)[0]
+		# sensor_predicts[sensor_file]['local_single'].append((round,local_predicted))
+		''' (Single-output) Chained Predictions '''
+		print(f"{sensor_id} now predicting by its chained baseline model (2/3)...")
+		chained_baseline_predictions = chain_predict(single_baseline_model, X_test_chained, INPUT_LENGTH)
+		chained_baseline_predictions = scaler.inverse_transform(chained_baseline_predictions.reshape(-1, 1)).reshape(1, -1)[0]
+		sensor_predicts[sensor_file]['baseline_chained'].append((round,chained_baseline_predictions))
+		''' Multi-output Predictions '''
+		print(f"{sensor_id} now predicting by its chained baseline model (3/3)...")
+		multi_baseline_predictions = multi_baseline_model.predict(X_test_multi)
+		multi_baseline_predictions = scaler.inverse_transform(multi_baseline_predictions.reshape(-1, 1)).reshape(1, -1)[0]
+		sensor_predicts[sensor_file]['baseline_multi'].append((round,multi_baseline_predictions))
 		''' true data '''
-		y_test = scaler.inverse_transform(y_test.reshape(-1, 1)).reshape(1, -1)[0]
-		sensor_predicts[sensor_file]['true'].append((round,y_test))
+		y_true = scaler.inverse_transform(y_true.reshape(-1, 1)).reshape(1, -1)[0]
+		sensor_predicts[sensor_file]['true'].append((round,y_true))
 		
 	
 	''' Simulate FedAvg '''
-	global_weights = np.mean(local_model_weights, axis=0)
-	global_model.set_weights(global_weights)
-	global_model.save(f'{log_files_folder_path}/globals/round_{round}.h5')
-	# Predict by global model
+	# create single-output global model
+	single_global_weights = np.mean(single_local_model_weights, axis=0)
+	single_global_model.set_weights(single_global_weights)
+	single_global_model.save(f'{logs_dirpath}/globals/single_h5/comm_{round}.h5')
+	# create multi-output global model
+	multi_global_weights = np.mean(multi_local_model_weights, axis=0)
+	multi_global_model.set_weights(multi_global_weights)
+	single_global_model.save(f'{logs_dirpath}/globals/multi_h5/comm_{round}.h5')
+	# store global model paths
+	global_model_paths[round] = {}
+	global_model_paths[round]["single"] = f'{logs_dirpath}/globals/single_h5/comm_{round}.h5'
+	global_model_paths[round]["multi"] = f'{logs_dirpath}/globals/multi_h5/comm_{round}.h5'
+	# Predict by global models
 	for sensor_file, sensor_attrs in sensor_predicts.items():
-		print(f"Simulating {sensor_file} FedAvg...")
+		sensor_id = sensor_file.split('.')[0]
+		print(f"Simulating {sensor_id} FedAvg...")
 		# try:
 			# global_predicted = global_model.predict(X_train_records[sensor_file])
-		''' onestep prediction '''
-		global_predicted = global_model.predict(X_test_records[sensor_file])
-		global_predicted = scaler.inverse_transform(global_predicted.reshape(-1, 1)).reshape(1, -1)[0]
-		sensor_predicts[sensor_file]['global_onestep'].append((round,global_predicted))
-		''' chain prediction '''
+		''' (Single-output) Onestep Predictions '''
+		print(f"{sensor_id} now predicting by the single-output global model using onestep method.. (1/3)")
+		single_global_predicted = single_global_model.predict(X_test_records[sensor_file]['X_test_onestep'])
+		single_global_predicted = scaler.inverse_transform(single_global_predicted.reshape(-1, 1)).reshape(1, -1)[0]
+		sensor_predicts[sensor_file]['global_onestep'].append((round,single_global_predicted))
+		''' (Single-output) Chained Predictions '''
+		print(f"{sensor_id} now predicting by the single-output global model using chained method.. (2/3)")
 		# print(X_train_records[sensor_file])
-		global_predicted = chain_predict(global_model, X_train_records[sensor_file], INPUT_LENGTH)
+		chained_global_predicted = chain_predict(single_global_model, X_test_records[sensor_file]['X_test_chained'], INPUT_LENGTH)
 		# except:
 		#   print(f'Data error - {sensor_file} does not contain data point {starting_created_time}.')
 		#   # sys.exit(1)
 		#   continue
-		global_predicted = scaler.inverse_transform(global_predicted.reshape(-1, 1)).reshape(1, -1)[0]
+		chained_global_predicted = scaler.inverse_transform(chained_global_predicted.reshape(-1, 1)).reshape(1, -1)[0]
 		# print("global_predicted.shape", global_predicted.shape)
-		sensor_predicts[sensor_file]['global_chained'].append((round,global_predicted))
-	
-	predictions_record_saved_path = f'{log_files_folder_path}/all_predicts.pkl'
+		sensor_predicts[sensor_file]['global_chained'].append((round,chained_global_predicted))
+		''' Multi-output Predictions '''
+		print(f"{sensor_id} now predicting by the multi-output global model.. (3/3)")
+		multi_global_predicted = multi_global_model.predict(X_test_records[sensor_file]['X_test_multi'])
+		multi_global_predicted = scaler.inverse_transform(multi_global_predicted.reshape(-1, 1)).reshape(1, -1)[0]
+		sensor_predicts[sensor_file]['global_multi'].append((round,multi_global_predicted))
+  
+	predictions_record_saved_path = f'{logs_dirpath}/all_predicts.pkl'
 	with open(predictions_record_saved_path, 'wb') as f:
 		pickle.dump(sensor_predicts, f)
 
-	''' Record Baseline Models Paths '''
-	with open(f'{log_files_folder_path}/baseline_model_paths.pkl', 'wb') as f:
+	''' Record Baseline Model Paths '''
+	with open(f'{logs_dirpath}/baseline_model_paths.pkl', 'wb') as f:
 		pickle.dump(baseline_models, f)
+	
+	''' Record Global Model Paths '''
+	with open(f"{logs_dirpath}/global_model_paths.pkl", 'wb') as f:
+		pickle.dump(global_model_paths, f)
 
 	''' Record Resume Round'''
-	with open(f'{log_files_folder_path}/rounds_done.txt', 'a+') as f:
-		f.write(f'{round}\n')
+	config_vars["last_round"] = round
+	with open(f"{logs_dirpath}/config_vars.pkl", 'wb') as f:
+		pickle.dump(config_vars, f)
  
 	

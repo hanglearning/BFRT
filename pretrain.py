@@ -32,9 +32,9 @@ parser.add_argument('-p', '--pretrain_percentage', type=float, default=1.00, hel
 parser.add_argument('-b', '--batch', type=int, default=256, help='batch number for the pretrain dataset')
 parser.add_argument('-e', '--epoch', type=int, default=150, help='epoch number for pretrain')
 parser.add_argument('-m', '--model', type=str, default='lstm', help='Model to choose - lstm or gru')
-parser.add_argument('-he', '--hidden_neurons', type=int, default=128, help='number of neurons in 2 layers')
-parser.add_argument('-ff', '--num_of_feedforward_predictions', type=int, default=12, help='number of feedforward predictions, used to set up the number of the last layer of the model and the number of chained predictions (usually it has to be equal to -il)')
-parser.add_argument('-log', '--logs_base_folder', type=str, default="/content/drive/MyDrive/Traffic Prediction FedAvg Simulation/device_outputs_Preprocessed_V1.1", help='base folder path to store running logs and h5 files')
+parser.add_argument('-hn', '--hidden_neurons', type=int, default=128, help='number of neurons in 2 layers')
+parser.add_argument('-ff', '--num_feedforward', type=int, default=12, help='number of feedforward predictions, used to set up the number of the neurons in the last layer of the model and the number of chained predictions (usually it has to be equal to -il)')
+parser.add_argument('-lb', '--logs_base_folder', type=str, default="/content/drive/MyDrive/Traffic Prediction FedAvg Simulation/device_outputs_Preprocessed_V1.1", help='base folder path to store running logs and h5 files')
 
 
 args = parser.parse_args()
@@ -64,7 +64,7 @@ else:
     pretrain_config = {"batch": args['batch'], "epochs":  args['epoch']}
     pretrain_percentage = args['pretrain_percentage']
     INPUT_LENGTH = args['input_length']
-    feed_forward = args['num_of_feedforward_predictions']
+    feed_forward = args['num_feedforward']
     vars_record['pretrain_config'] = pretrain_config
     vars_record['pretrain_percentage'] = pretrain_percentage
     vars_record['INPUT_LENGTH'] = INPUT_LENGTH
@@ -192,7 +192,9 @@ def run_pretrain(log_files_folder_path, pretrain_config, pretrain_percentage, al
           (sensor_file, X_train_multi, y_train_multi) = processed_pretrain_dataset_multi
           
           print(f"Training epoch {epoch} csv file {seq}/{len(processed_pretrain_datasets)} {sensor_file}...")
+          print("Training model with single output neural.")
           model_file_path = pretrain_model(model_file_path, X_train, y_train, log_files_folder_path, epoch, seq, pretrain_config["batch"], "single")
+          print(f"Training model with {feed_forward} output neural.")
           model_file_path_multi = pretrain_model(model_file_path_multi, X_train_multi, y_train_multi, log_files_folder_path, epoch, seq, pretrain_config["batch"], "multi")
           seq += 1
       seq = 1
