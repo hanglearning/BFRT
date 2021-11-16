@@ -24,6 +24,11 @@ from process_data import process_test_one_step
 from process_data import process_test_chained
 from process_data import process_test_multi_and_get_y_true
 
+# remove some warnings
+import tensorflow as tf
+import logging
+tf.get_logger().setLevel(logging.ERROR)
+
 ''' Parse command line arguments '''
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description="traffic_fedavg_simulation")
 
