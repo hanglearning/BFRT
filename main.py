@@ -443,6 +443,7 @@ for round in range(STARTING_ROUND, config_vars["comm_rounds"] + 1):
 		multi_global_predicted = scaler.inverse_transform(multi_global_predicted.reshape(-1, 1)).reshape(1, -1)[0]
 		sensor_predicts[sensor_file]['global_multi'].append((round,multi_global_predicted))
 		sensor_count += 1
+	
 	predictions_record_saved_path = f'{logs_dirpath}/all_predicts.pkl'
 	with open(predictions_record_saved_path, 'wb') as f:
 		pickle.dump(sensor_predicts, f)
