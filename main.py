@@ -283,9 +283,9 @@ for round in range(STARTING_ROUND, config_vars["comm_rounds"] + 1):
 	# starting_created_time = created_time_column.iloc[training_data_starting_index] # now we assume data is preprocessed
 	X_train_records = {}
 	X_test_records = {}
-	for sensor_file in all_sensor_files:
+	for sensor_file_iter in range(len(all_sensor_files)):
+		sensor_file = all_sensor_files[sensor_file_iter]
 		sensor_id = sensor_file.split('.')[0]
-		
 		''' Process traning data '''
 		if round == 1:
 			training_data_starting_index = starting_data_index
@@ -303,8 +303,7 @@ for round in range(STARTING_ROUND, config_vars["comm_rounds"] + 1):
 		# process training data
 		X_train_single, y_train_single = process_train_data_single(train_data, scaler, INPUT_LENGTH)
 		X_train_multi, y_train_multi = process_train_data_multi(train_data, scaler, INPUT_LENGTH, config_vars['num_feedforward'])
-  
-		debug_text = f"DEBUG INFO: {sensor_id} now uses its own data starting at {training_data_starting_index} to {training_data_ending_index}\n"
+		debug_text = f"DEBUG INFO: {sensor_id} ({sensor_file_iter+1}/{len(all_sensor_files)}) now uses its own data starting at {training_data_starting_index} to {training_data_ending_index}\n"
 		print(debug_text)
 		
 		''' Process test data '''
@@ -411,9 +410,10 @@ for round in range(STARTING_ROUND, config_vars["comm_rounds"] + 1):
 	global_model_paths[round]["single"] = f'{logs_dirpath}/globals/single_h5/comm_{round}.h5'
 	global_model_paths[round]["multi"] = f'{logs_dirpath}/globals/multi_h5/comm_{round}.h5'
 	# Predict by global models
+	sensor_count = 1
 	for sensor_file, sensor_attrs in sensor_predicts.items():
 		sensor_id = sensor_file.split('.')[0]
-		print(f"Simulating {sensor_id} FedAvg...")
+		print(f"Simulating {sensor_id} ({sensor_count}/{len(all_sensor_files)}) FedAvg...")
 		# try:
 			# global_predicted = global_model.predict(X_train_records[sensor_file])
 		''' (Single-output) Onestep Predictions '''
@@ -437,7 +437,7 @@ for round in range(STARTING_ROUND, config_vars["comm_rounds"] + 1):
 		multi_global_predicted = multi_global_model.predict(X_test_records[sensor_file]['X_test_multi'])
 		multi_global_predicted = scaler.inverse_transform(multi_global_predicted.reshape(-1, 1)).reshape(1, -1)[0]
 		sensor_predicts[sensor_file]['global_multi'].append((round,multi_global_predicted))
-  
+		sensor_count += 1
 	predictions_record_saved_path = f'{logs_dirpath}/all_predicts.pkl'
 	with open(predictions_record_saved_path, 'wb') as f:
 		pickle.dump(sensor_predicts, f)
