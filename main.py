@@ -267,7 +267,7 @@ else:
 		read_to_line = int((num_lines-1) * config_vars["train_percent"])
 		whole_data = pd.read_csv(file_path, nrows=read_to_line, encoding='utf-8').fillna(0)
 		print(f'Loaded {read_to_line} lines of data from {sensor_file}. ({sensor_file_iter+1}/{len(all_sensor_files)})')
-  		whole_data_dict[sensor_file] = whole_data
+		whole_data_dict[sensor_file] = whole_data
 		whole_data_list.append(whole_data)
 	config_vars["whole_data_dict"] = whole_data_dict
 	# get scaler
@@ -277,7 +277,7 @@ else:
 	# store training config
 	with open(f"{logs_dirpath}/config_vars.pkl", 'wb') as f:
 		pickle.dump(config_vars, f)
-  
+
 # print("starting_data_index", starting_data_index)
 
 # init FedAvg vars
