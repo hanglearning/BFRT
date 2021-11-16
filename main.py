@@ -2,6 +2,7 @@ import os
 from os import listdir
 from os.path import isfile, join
 import sys
+import csv
 import numpy as np
 import pandas as pd
 from datetime import datetime
@@ -51,6 +52,7 @@ parser.add_argument('-b', '--batch', type=int, default=1, help='batch number for
 parser.add_argument('-es', '--epochs_single', type=int, default=5, help='epoch number for models with single output per comm round for FL')
 parser.add_argument('-em', '--epochs_multi', type=int, default=5, help='epoch number for models with multiple output per comm round for FL')
 parser.add_argument('-ff', '--num_feedforward', type=int, default=12, help='number of feedforward predictions, used to set up the number of the last layer of the model and the number of chained predictions (usually it has to be equal to -il)')
+parser.add_argument('-tp', '--train_percent', type=float, default=0.8, help='percentage of the data for training')
 
 # arguments for federated learning
 parser.add_argument('-c', '--comm_rounds', type=int, default=240, help='number of comm rounds')
@@ -244,21 +246,28 @@ else:
 		sensor_predicts[sensor_file]['true'] = []
 
 	# use the first sensor data created_time as the standard to ease simulation data slicing
-	file_path = os.path.join(args['dataset_path'], all_sensor_files[0])
-	created_time_column = pd.read_csv(file_path, encoding='utf-8').fillna(0)['created_time']
+	# file_path = os.path.join(args['dataset_path'], all_sensor_files[0])
+	# created_time_column = pd.read_csv(file_path, encoding='utf-8').fillna(0)['created_time']
 		
-	config_vars["created_time_column"] = created_time_column
+	# config_vars["created_time_column"] = created_time_column
 	config_vars["starting_data_index"] = starting_data_index
 
 	# read whole data for each sensor
 	whole_data_dict = {}
 	whole_data_list = []
-	for sensor_file in all_sensor_files:
+	for sensor_file_iter in range(len(all_sensor_files)):
+		sensor_file = all_sensor_files[sensor_file_iter]
 		# data file path
 		file_path = os.path.join(config_vars['dataset_path'], sensor_file)
 		# read data
-		whole_data = pd.read_csv(file_path, encoding='utf-8').fillna(0)
-		whole_data_dict[sensor_file] = whole_data
+		# count lines
+		file = open(file_path)
+		reader = csv.reader(file)
+		num_lines = len(list(reader))
+		read_to_line = int((num_lines-1) * config_vars["train_percent"])
+		whole_data = pd.read_csv(file_path, nrows=read_to_line, encoding='utf-8').fillna(0)
+		print(f'Loaded {read_to_line} lines of data from {sensor_file}. ({sensor_file_iter+1}/{len(all_sensor_files)})')
+  		whole_data_dict[sensor_file] = whole_data
 		whole_data_list.append(whole_data)
 	config_vars["whole_data_dict"] = whole_data_dict
 	# get scaler
