@@ -405,7 +405,7 @@ for round in range(STARTING_ROUND, config_vars["comm_rounds"] + 1):
 	# create multi-output global model
 	multi_global_weights = np.mean(multi_local_model_weights, axis=0)
 	multi_global_model.set_weights(multi_global_weights)
-	single_global_model.save(f'{logs_dirpath}/globals/multi_h5/comm_{round}.h5')
+	multi_global_model.save(f'{logs_dirpath}/globals/multi_h5/comm_{round}.h5')
 	# store global model paths
 	global_model_paths[round] = {}
 	global_model_paths[round]["single"] = f'{logs_dirpath}/globals/single_h5/comm_{round}.h5'
