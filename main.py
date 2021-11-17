@@ -122,14 +122,14 @@ if args['resume_path']:
 	with open(f"{logs_dirpath}/config_vars.pkl", 'rb') as f:
 		config_vars = pickle.load(f)
 	# init build_model function
-	build_model = build_lstm if config_vars["model_chosen"] == 'lstm' else build_gru
+	build_model = build_lstm if config_vars["model"] == 'lstm' else build_gru
 	# load starting round
 	last_round = config_vars["last_round"]
 	# to make it easy, retrain the last epoch for all models
 	STARTING_ROUND = last_round
 	# load global model
-	single_global_model = load_model(f'{logs_dirpath}/globals/single/round_{last_round}.h5')
-	multi_global_model = load_model(f'{logs_dirpath}/globals/multi/round_{last_round}.h5')
+	single_global_model = load_model(f'{logs_dirpath}/globals/single_h5/comm_{last_round}.h5')
+	multi_global_model = load_model(f'{logs_dirpath}/globals/multi_h5/comm_{last_round}.h5')
 	# load all_sensor_predicts
 	with open(f"{logs_dirpath}/all_predicts.pkl", 'rb') as f:
 		sensor_predicts = pickle.load(f)
@@ -138,10 +138,11 @@ if args['resume_path']:
 		baseline_models = pickle.load(f)
 	# load global model paths
 	with open(f'{logs_dirpath}/global_model_paths.pkl', 'rb') as f:
-		baseline_models = pickle.load(f)
+		global_model_paths = pickle.load(f)
 	# other exposed vars
-	whole_data_dict = config_vars["scaler"]
+	whole_data_dict = config_vars["whole_data_dict"]
 	scaler = config_vars["scaler"]
+	all_sensor_files = config_vars["all_sensor_files"]
 else:
 	STARTING_ROUND = 1
 	# load pretrained models if specified
@@ -266,7 +267,7 @@ else:
 		num_lines = len(list(reader))
 		read_to_line = int((num_lines-1) * config_vars["train_percent"])
 		whole_data = pd.read_csv(file_path, nrows=read_to_line, encoding='utf-8').fillna(0)
-		print(f'Loaded {read_to_line} lines of data from {sensor_file}. ({sensor_file_iter+1}/{len(all_sensor_files)})')
+		print(f'Loaded {read_to_line} lines of data from {sensor_file} (percentage: {config_vars["train_percent"]}). ({sensor_file_iter+1}/{len(all_sensor_files)})')
 		whole_data_dict[sensor_file] = whole_data
 		whole_data_list.append(whole_data)
 	config_vars["whole_data_dict"] = whole_data_dict
