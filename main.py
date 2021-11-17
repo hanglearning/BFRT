@@ -140,9 +140,24 @@ if args['resume_path']:
 	with open(f'{logs_dirpath}/global_model_paths.pkl', 'rb') as f:
 		global_model_paths = pickle.load(f)
 	# other exposed vars
-	whole_data_dict = config_vars["whole_data_dict"]
+	# whole_data_dict = config_vars["whole_data_dict"]
 	scaler = config_vars["scaler"]
 	all_sensor_files = config_vars["all_sensor_files"]
+	# load data
+	whole_data_dict = {}
+	for sensor_file_iter in range(len(all_sensor_files)):
+		sensor_file = all_sensor_files[sensor_file_iter]
+		# data file path
+		file_path = os.path.join(config_vars['dataset_path'], sensor_file)
+		# read data
+		# count lines
+		file = open(file_path)
+		reader = csv.reader(file)
+		num_lines = len(list(reader))
+		read_to_line = int((num_lines-1) * config_vars["train_percent"])
+		whole_data = pd.read_csv(file_path, nrows=read_to_line, encoding='utf-8').fillna(0)
+		print(f'Loaded {read_to_line} lines of data from {sensor_file} (percentage: {config_vars["train_percent"]}). ({sensor_file_iter+1}/{len(all_sensor_files)})')
+		whole_data_dict[sensor_file] = whole_data
 else:
 	STARTING_ROUND = 1
 	# load pretrained models if specified
@@ -270,7 +285,7 @@ else:
 		print(f'Loaded {read_to_line} lines of data from {sensor_file} (percentage: {config_vars["train_percent"]}). ({sensor_file_iter+1}/{len(all_sensor_files)})')
 		whole_data_dict[sensor_file] = whole_data
 		whole_data_list.append(whole_data)
-	config_vars["whole_data_dict"] = whole_data_dict
+	# config_vars["whole_data_dict"] = whole_data_dict
 	# get scaler
 	# TODO - test if whole, and, get scaler from pretraining??
 	scaler = get_scaler(pd.concat(whole_data_list))
