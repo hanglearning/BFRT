@@ -72,8 +72,8 @@ def plot_and_save(sensor_predicts):
       plt.xticks(x, my_xticks)
 
       if s_epoch and e_epoch:
-        print(f"Plotting comm round {s_epoch} to {e_epoch}.")
-        start_range = int(60/time_res*s_epoch)
+        print(f"Plotting comm round {s_epoch} to {e_epoch} for {sensor_id}.")
+        start_range = int(60/time_res*(s_epoch-1))
         end_range = int(60/time_res*e_epoch)
         ax.plot(x[start_range:end_range], plot_data['true']['y'][start_range:end_range], label='True Data')
         
@@ -86,7 +86,7 @@ def plot_and_save(sensor_predicts):
         # ax.plot(x[start_range:end_range], plot_data['baseline_multi']['y'][start_range:end_range], label='baseline_multi', color='lightsalmon')
       else:
         # if plot_last_comm_rounds > 22, there is an empty comm at the begining for x axis
-        print(f"Plotting last {plot_last_comm_rounds} comm rounds.")
+        print(f"Plotting last {plot_last_comm_rounds} comm rounds for {sensor_id}.")
         plotting_range = -int(60/time_res*plot_last_comm_rounds)
         ax.plot(x[plotting_range:], plot_data['true']['y'][plotting_range:], label='True Data')
         
