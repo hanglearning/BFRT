@@ -8,20 +8,25 @@ parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFo
 
 # arguments for system vars
 parser.add_argument('-lp', '--logs_dirpath', type=str, default=None, help='the log path where resides the all_predicts.pkl, e.g., /content/drive/MyDrive/09212021_142926_lstm')
-parser.add_argument('-pl', '--plot_last_comm_rounds', type=int, default=24, help='the number of the last comm rounds to plot')
+parser.add_argument('-pl', '--plot_last_comm_rounds', type=int, default=24, help='The number of the last comm rounds to plot. Will be a backup if starting_epoch and ending_epoch are not specified.')
+parser.add_argument('-se', '--starting_epoch', type=int, default=None, help='epoch number to start plotting')
+parser.add_argument('-ee', '--ending_epoch', type=int, default=None, help='epoch number to end plotting')
+parser.add_argument('-tr', '--time_resolution', type=int, default=5, help='time resolution of the data, default to 5 mins')
+
 
 args = parser.parse_args()
 args = args.__dict__
 
 ''' Variables Required '''
-input_length = 12
 logs_dirpath = args["logs_dirpath"]
-plotting_range = args["plot_last_comm_rounds"] # to plot last plotting_range hours
-''' Variables Required '''
-
 with open(f"{logs_dirpath}/config_vars.pkl", 'rb') as f:
-	config_vars = pickle.load(f)
+		config_vars = pickle.load(f)
 input_length = config_vars["input_length"]
+plot_last_comm_rounds = args["plot_last_comm_rounds"] # to plot last plot_last_comm_rounds hours
+time_res = args["time_resolution"]
+s_epoch = args["starting_epoch"]
+e_epoch = args["ending_epoch"]
+''' Variables Required '''
 
 plot_dir_path = f'{logs_dirpath}/plots'
 os.makedirs(plot_dir_path, exist_ok=True)
@@ -56,25 +61,42 @@ def plot_and_save(sensor_predicts):
       ax = fig.add_subplot(111)
       
       x = plot_data['true']['x']
-      # customize x axis labels
+      # customize x axis labels as comm rounds
       my_xticks = []
-      for i in range(len(x)):
-        if i % input_length == 0:
-          my_xticks.append(i//input_length + 1)
+      for x_ele in x:
+        if (x_ele - 1) % input_length == 0:
+          my_xticks.append(x_ele//input_length + 1)
         else:
           my_xticks.append('')
 
       plt.xticks(x, my_xticks)
 
-      ax.plot(x[-int(60/5*plotting_range):], plot_data['true']['y'][-int(60/5*plotting_range):], label='True Data')
-      
-      ax.plot(x[-int(60/5*plotting_range):], plot_data['global_chained']['y'][-int(60/5*plotting_range):], label='global_chained', color='darkgreen')
-      ax.plot(x[-int(60/5*plotting_range):], plot_data['global_onestep']['y'][-int(60/5*plotting_range):], label='global_onestep', color='lime')
-      ax.plot(x[-int(60/5*plotting_range):], plot_data['global_multi']['y'][-int(60/5*plotting_range):], label='global_multi', color='limegreen')
+      if s_epoch and e_epoch:
+        print(f"Plotting comm round {s_epoch} to {e_epoch}.")
+        start_range = int(60/time_res*s_epoch)
+        end_range = int(60/time_res*e_epoch)
+        ax.plot(x[start_range:end_range], plot_data['true']['y'][start_range:end_range], label='True Data')
+        
+        # ax.plot(x[start_range:end_range], plot_data['global_chained']['y'][start_range:end_range], label='global_chained', color='darkgreen')
+        ax.plot(x[start_range:end_range], plot_data['global_onestep']['y'][start_range:end_range], label='global_onestep', color='#5a773a')
+        # ax.plot(x[start_range:end_range], plot_data['global_multi']['y'][start_range:end_range], label='global_multi', color='limegreen')
 
-      ax.plot(x[-int(60/5*plotting_range):], plot_data['baseline_chained']['y'][-int(60/5*plotting_range):], label='baseline_chained', color='darkred')
-      ax.plot(x[-int(60/5*plotting_range):], plot_data['baseline_onestep']['y'][-int(60/5*plotting_range):], label='baseline_onestep', color='red')
-      ax.plot(x[-int(60/5*plotting_range):], plot_data['baseline_multi']['y'][-int(60/5*plotting_range):], label='baseline_multi', color='lightsalmon')
+        # ax.plot(x[start_range:end_range], plot_data['baseline_chained']['y'][start_range:end_range], label='baseline_chained', color='darkred')
+        ax.plot(x[start_range:end_range], plot_data['baseline_onestep']['y'][start_range:end_range], label='baseline_onestep', color='#ffb839')
+        # ax.plot(x[start_range:end_range], plot_data['baseline_multi']['y'][start_range:end_range], label='baseline_multi', color='lightsalmon')
+      else:
+        # if plot_last_comm_rounds > 22, there is an empty comm at the begining for x axis
+        print(f"Plotting last {plot_last_comm_rounds} comm rounds.")
+        plotting_range = -int(60/time_res*plot_last_comm_rounds)
+        ax.plot(x[plotting_range:], plot_data['true']['y'][plotting_range:], label='True Data')
+        
+        # ax.plot(x[plotting_range:], plot_data['global_chained']['y'][plotting_range:], label='global_chained', color='darkgreen')
+        ax.plot(x[plotting_range:], plot_data['global_onestep']['y'][plotting_range:], label='global_onestep', color='#5a773a')
+        # ax.plot(x[plotting_range:], plot_data['global_multi']['y'][plotting_range:], label='global_multi', color='limegreen')
+
+        # ax.plot(x[plotting_range:], plot_data['baseline_chained']['y'][plotting_range:], label='baseline_chained', color='darkred')
+        ax.plot(x[plotting_range:], plot_data['baseline_onestep']['y'][plotting_range:], label='baseline_onestep', color='#ffb839')
+        # ax.plot(x[plotting_range:], plot_data['baseline_multi']['y'][plotting_range:], label='baseline_multi', color='lightsalmon')
 
       plt.legend()
       plt.grid(True)

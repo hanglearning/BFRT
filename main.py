@@ -55,9 +55,8 @@ parser.add_argument('-ff', '--num_feedforward', type=int, default=12, help='numb
 parser.add_argument('-tp', '--train_percent', type=float, default=0.8, help='percentage of the data for training')
 
 # arguments for federated learning
-parser.add_argument('-c', '--comm_rounds', type=int, default=240, help='number of comm rounds')
+parser.add_argument('-c', '--comm_rounds', type=int, default=None, help='number of comm rounds, default aims to run until data is exhausted')
 parser.add_argument('-ml', '--max_data_length', type=int, default=72, help='maximum data length for training in each communication round, simulating a memory a sensor has')
-
 
 args = parser.parse_args()
 args = args.__dict__
@@ -70,6 +69,7 @@ if args['resume_path']:
 	# load config variables
 	with open(f"{logs_dirpath}/config_vars.pkl", 'rb') as f:
 		config_vars = pickle.load(f)
+	all_sensor_files = config_vars["all_sensor_files"]
 else:
 	''' Global Variables Set Up '''
 
@@ -117,6 +117,27 @@ NOTE - Naive iterating over data. Will not deal with potential repeated or missi
 
 """
 
+# load data
+# read whole data for each sensor
+whole_data_dict = {}
+whole_data_list = [] # to calculate scalar
+individual_max_data_sample = 0 # to determine max comm rounds
+for sensor_file_iter in range(len(all_sensor_files)):
+	sensor_file = all_sensor_files[sensor_file_iter]
+	# data file path
+	file_path = os.path.join(config_vars['dataset_path'], sensor_file)
+	# read data
+	# count lines
+	file = open(file_path)
+	reader = csv.reader(file)
+	num_lines = len(list(reader))
+	read_to_line = int((num_lines-1) * config_vars["train_percent"])
+	individual_max_data_sample = read_to_line if read_to_line > individual_max_data_sample else individual_max_data_sample
+	whole_data = pd.read_csv(file_path, nrows=read_to_line, encoding='utf-8').fillna(0)
+	print(f'Loaded {read_to_line} lines of data from {sensor_file} (percentage: {config_vars["train_percent"]}). ({sensor_file_iter+1}/{len(all_sensor_files)})')
+	whole_data_dict[sensor_file] = whole_data
+	whole_data_list.append(whole_data)
+
 if args['resume_path']:
 	# resume training
 	with open(f"{logs_dirpath}/config_vars.pkl", 'rb') as f:
@@ -143,21 +164,6 @@ if args['resume_path']:
 	# whole_data_dict = config_vars["whole_data_dict"]
 	scaler = config_vars["scaler"]
 	all_sensor_files = config_vars["all_sensor_files"]
-	# load data
-	whole_data_dict = {}
-	for sensor_file_iter in range(len(all_sensor_files)):
-		sensor_file = all_sensor_files[sensor_file_iter]
-		# data file path
-		file_path = os.path.join(config_vars['dataset_path'], sensor_file)
-		# read data
-		# count lines
-		file = open(file_path)
-		reader = csv.reader(file)
-		num_lines = len(list(reader))
-		read_to_line = int((num_lines-1) * config_vars["train_percent"])
-		whole_data = pd.read_csv(file_path, nrows=read_to_line, encoding='utf-8').fillna(0)
-		print(f'Loaded {read_to_line} lines of data from {sensor_file} (percentage: {config_vars["train_percent"]}). ({sensor_file_iter+1}/{len(all_sensor_files)})')
-		whole_data_dict[sensor_file] = whole_data
 else:
 	STARTING_ROUND = 1
 	# load pretrained models if specified
@@ -169,7 +175,7 @@ else:
 			post_pretrain_data_index = pickle.load(f)
 		starting_data_index = post_pretrain_data_index[all_sensor_files[0]]
 	else:
-		print("Pretrained models read error/not provided. Training from scratch...")
+		print("\nPretrained models read error/not provided. Training from scratch...")
 		starting_data_index = 0
 	# init global model
 	global_model_paths = {}
@@ -193,7 +199,6 @@ else:
 		os.makedirs(multi_global_model_path, exist_ok=True)
 		multi_global_model.save(f'{multi_global_model_path}/comm_0.h5')
 		# record global models for easy access
-		# format global_model_paths[comm_round]["single" or "multi"]
 		global_model_paths[0] = {}
 		global_model_paths[0]["single"] = f'{single_global_model_path}/comm_0.h5'
 		global_model_paths[0]["multi"] = f'{multi_global_model_path}/comm_0.h5'
@@ -224,13 +229,8 @@ else:
 			multi_baseline_model = load_model(multi_pretrained_model)
 		else:
 			# create new models
-			# single_baseline_model = build_model([config_vars['input_length'], config_vars['hidden_neurons'], config_vars['hidden_neurons'], 1])
-			# single_baseline_model.compile(loss="mse", optimizer="rmsprop", metrics=['mape'])
 			single_baseline_model = deepcopy(single_global_model)
- 			# multi_baseline_model = build_model([config_vars['input_length'], config_vars['hidden_neurons'], config_vars['hidden_neurons'], config_vars['num_feedforward']])
-			# multi_baseline_model.compile(loss="mse", optimizer="rmsprop", metrics=['mape'])
 			multi_baseline_model = deepcopy(multi_global_model)
-	  
 			single_baseline_model_path = f'{h5_single_baseline_dirpath}/comm_0.h5'
 			single_baseline_model.save(single_baseline_model_path)
 			multi_baseline_model_path = f'{h5_multi_baseline_dirpath}/comm_0.h5'
@@ -240,7 +240,6 @@ else:
 		baseline_models[sensor_file]['single_baseline_model_path'] = single_baseline_model_path
 		baseline_models[sensor_file]['multi_baseline_model_path'] = multi_baseline_model_path
 		baseline_models[sensor_file]['this_sensor_dirpath'] = this_sensor_dirpath
-
 	
 	# init prediction records
 	sensor_predicts = {}
@@ -268,24 +267,6 @@ else:
 	# config_vars["created_time_column"] = created_time_column
 	config_vars["starting_data_index"] = starting_data_index
 
-	# read whole data for each sensor
-	whole_data_dict = {}
-	whole_data_list = []
-	for sensor_file_iter in range(len(all_sensor_files)):
-		sensor_file = all_sensor_files[sensor_file_iter]
-		# data file path
-		file_path = os.path.join(config_vars['dataset_path'], sensor_file)
-		# read data
-		# count lines
-		file = open(file_path)
-		reader = csv.reader(file)
-		num_lines = len(list(reader))
-		read_to_line = int((num_lines-1) * config_vars["train_percent"])
-		whole_data = pd.read_csv(file_path, nrows=read_to_line, encoding='utf-8').fillna(0)
-		print(f'Loaded {read_to_line} lines of data from {sensor_file} (percentage: {config_vars["train_percent"]}). ({sensor_file_iter+1}/{len(all_sensor_files)})')
-		whole_data_dict[sensor_file] = whole_data
-		whole_data_list.append(whole_data)
-	# config_vars["whole_data_dict"] = whole_data_dict
 	# get scaler
 	# TODO - test if whole, and, get scaler from pretraining??
 	scaler = get_scaler(pd.concat(whole_data_list))
@@ -300,11 +281,26 @@ else:
 INPUT_LENGTH = config_vars['input_length']
 new_sample_size_per_comm_round = INPUT_LENGTH
 
-
+# determine maximum comm rounds by the maximum number of data sample a device owned and the input_length
+max_comm_rounds = individual_max_data_sample // INPUT_LENGTH - 2
+if config_vars['comm_rounds']:
+	if max_comm_rounds > config_vars['comm_rounds']:
+		print(f"\nNote: the provided dataset allows running for maximum {max_comm_rounds} comm rounds but the simulation is configured to run for {config_vars['comm_rounds']} comm rounds.")
+		run_comm_rounds = config_vars['comm_rounds']
+	elif config_vars['comm_rounds'] > max_comm_rounds:
+		print(f"\nNote: the provided dataset ONLY allows running for maximum {max_comm_rounds} comm rounds, which is less than the configured {config_vars['comm_rounds']} comm rounds.")
+		run_comm_rounds = max_comm_rounds
+	else:
+		run_comm_rounds = max_comm_rounds
+else:
+    print(f"\nNote: the provided dataset allows running for maximum {max_comm_rounds} comm rounds.")
+    run_comm_rounds = max_comm_rounds
+    
+print(f"Starting FedAvg with total comm rounds {run_comm_rounds}...")
 # tf.compat.v1.disable_v2_behavior() # model trained in tf1    
 ''' Local Training, FedAvg, Prediction (simulating real-time FedAvg) '''
 # one comm round -> feed in one hour of new data (5 min resolution) if input_length = 12
-for round in range(STARTING_ROUND, config_vars["comm_rounds"] + 1):
+for round in range(STARTING_ROUND, run_comm_rounds + 1):
 	single_local_model_weights = []
 	multi_local_model_weights = []
 	single_global_weights = single_global_model.get_weights()
@@ -356,12 +352,6 @@ for round in range(STARTING_ROUND, config_vars["comm_rounds"] + 1):
 		''' reshape data '''
 		for train_data in ['X_train_single', 'X_train_multi', 'X_test_onestep', 'X_test_chained', 'X_test_multi']:
 			vars()[train_data] = np.reshape(vars()[train_data], (vars()[train_data].shape[0], vars()[train_data].shape[1], 1))
-		# X_train_single = np.reshape(X_train_single, (X_train_single.shape[0], X_train_single.shape[1], 1))
-		# X_train_multi = np.reshape(X_train_multi, (X_train_multi.shape[0], X_train_multi.shape[1], 1))
-		# X_test_onestep = np.reshape(X_test_onestep, (X_test_onestep.shape[0], X_test_onestep.shape[1], 1))
-		# X_test_chained = np.reshape(X_test_chained, (X_test_chained.shape[0], X_test_chained.shape[1], 1))
-		# X_test_multi = np.reshape(X_test_multi, (X_test_multi.shape[0], X_test_multi.shape[1], 1))
-  
 	
 		X_train_records[sensor_file] = {}
 		X_train_records[sensor_file]['X_train_single'] = X_train_single
@@ -486,4 +476,4 @@ for round in range(STARTING_ROUND, config_vars["comm_rounds"] + 1):
 	with open(f"{logs_dirpath}/config_vars.pkl", 'wb') as f:
 		pickle.dump(config_vars, f)
  
-	
+print(f"Simulation conclueded after comm rounds {round}.")
