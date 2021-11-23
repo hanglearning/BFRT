@@ -28,7 +28,7 @@ s_epoch = args["starting_epoch"]
 e_epoch = args["ending_epoch"]
 ''' Variables Required '''
 
-plot_dir_path = f'{logs_dirpath}/plots'
+plot_dir_path = f'{logs_dirpath}/plots/realtime_learning_curves'
 os.makedirs(plot_dir_path, exist_ok=True)
 
 def plot_and_save(sensor_predicts):

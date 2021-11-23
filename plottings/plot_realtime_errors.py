@@ -39,7 +39,7 @@ with open(f'{logs_dirpath}/realtime_predicts.pkl', 'rb') as f:
 # plot_range = args["plot_range"]
 ''' load vars '''
 
-plot_dir_path = f'{logs_dirpath}/plots_realtime_errors'
+plot_dir_path = f'{logs_dirpath}/plots/realtime_errors'
 os.makedirs(plot_dir_path, exist_ok=True)
 
 ''' calculate errors '''

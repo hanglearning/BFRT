@@ -37,10 +37,10 @@
             "args": ["-dp", "/Users/chenhang/Documents/Working/traffic_fedavg/Preprocessed_V1.1_4sensors", "-lb", "/Users/chenhang/Documents/Working/traffic_fedavg/logs", "-rp", "/Users/chenhang/Documents/Working/traffic_fedavg/logs/11152021_200702_lstm_12"]
         },
         {
-            "name": "plot_last_percent_prediction.py",
+            "name": "plot_last_percent_inferences.py",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/experimental_figures/plot_last_percent_prediction.py",
+            "program": "${workspaceFolder}/experimental_figures/plot_last_percent_inferences.py",
             "console": "integratedTerminal",
             "args": ["-dp", "/Users/chenhang/Documents/Working/traffic_fedavg/Preprocessed_V1.1_4sensors", "-lp", "/Users/chenhang/Documents/Working/traffic_fedavg/logs/11222021_212450_lstm_12"]
         },
