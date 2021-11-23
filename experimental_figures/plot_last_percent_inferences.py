@@ -176,6 +176,6 @@ def calculate_errors(inference_record):
         error_values_df = pd.DataFrame.from_dict(model)
         print(tabulate(error_values_df.round(2), headers='keys', tablefmt='psql'))
 
-# plot_and_save(inference_record)
+plot_and_save(inference_record)
 calculate_errors(inference_record)
 
