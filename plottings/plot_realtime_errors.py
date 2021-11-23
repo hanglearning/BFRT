@@ -23,6 +23,7 @@ from error_calc import get_MAPE
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description="inferencing code")
 
 parser.add_argument('-lp', '--logs_dirpath', type=str, default=None, help='the log path where resides the realtime_predicts.pkl, e.g., /content/drive/MyDrive/09212021_142926_lstm')
+parser.add_argument('-et', '--error_type', type=str, default="MAE", help='error type to plot')
 # parser.add_argument('-pr', '--plot_range', type=int, default=288, help='plot the learning curves of this number of the last predictions. default to 24*(60/5)=288 assuming 5 min resolution')
 
 args = parser.parse_args()
@@ -89,4 +90,4 @@ def plot_realtime_errors(prediction_errors, error_to_plot):
         plt.show()
 
 prediction_errors = calculate_errors(realtime_predicts)
-plot_realtime_errors(prediction_errors, "MAE")
+plot_realtime_errors(prediction_errors, args["error_type"])
