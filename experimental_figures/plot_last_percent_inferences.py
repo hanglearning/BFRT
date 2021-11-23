@@ -149,7 +149,7 @@ def plot_and_save(inference_record):
 
         plt.legend()
         plt.grid(True)
-        plt.xlabel('Comm Round')
+        plt.xlabel('Timeline')
         plt.ylabel('Volume')
         plt.title(sensor_id)
         fig = plt.gcf()
