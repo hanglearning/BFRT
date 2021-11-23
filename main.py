@@ -120,7 +120,7 @@ NOTE - Naive iterating over data. Will not deal with potential repeated or missi
 # load data
 # read whole data for each sensor
 whole_data_dict = {}
-whole_data_list = [] # to calculate scalar
+whole_data_list = [] # to calculate scaler
 individual_max_data_sample = 0 # to determine max comm rounds
 for sensor_file_iter in range(len(all_sensor_files)):
 	sensor_file = all_sensor_files[sensor_file_iter]
@@ -152,7 +152,7 @@ if args['resume_path']:
 	single_global_model = load_model(f'{logs_dirpath}/globals/single_h5/comm_{last_round}.h5')
 	multi_global_model = load_model(f'{logs_dirpath}/globals/multi_h5/comm_{last_round}.h5')
 	# load all_sensor_predicts
-	with open(f"{logs_dirpath}/all_predicts.pkl", 'rb') as f:
+	with open(f"{logs_dirpath}/realtime_predicts.pkl", 'rb') as f:
 		sensor_predicts = pickle.load(f)
 	# load baseline model paths
 	with open(f'{logs_dirpath}/baseline_model_paths.pkl', 'rb') as f:
@@ -345,7 +345,7 @@ for round in range(STARTING_ROUND, run_comm_rounds + 1):
 		test_data_chained = whole_data[test_data_starting_index: test_data_ending_index_chained_multi + 1]
 
 		# process data
-		X_test_onestep = process_test_one_step(test_data_onestep_multi, scaler, INPUT_LENGTH)
+		X_test_onestep, _ = process_test_one_step(test_data_onestep_multi, scaler, INPUT_LENGTH)
 		X_test_chained = process_test_chained(test_data_chained, scaler, INPUT_LENGTH)
 		X_test_multi, y_true = process_test_multi_and_get_y_true(test_data_onestep_multi, scaler, INPUT_LENGTH, config_vars['num_feedforward'])
 
@@ -459,7 +459,7 @@ for round in range(STARTING_ROUND, run_comm_rounds + 1):
 		sensor_predicts[sensor_file]['global_multi'].append((round,multi_global_predicted))
 		sensor_count += 1
 	
-	predictions_record_saved_path = f'{logs_dirpath}/all_predicts.pkl'
+	predictions_record_saved_path = f'{logs_dirpath}/realtime_predicts.pkl'
 	with open(predictions_record_saved_path, 'wb') as f:
 		pickle.dump(sensor_predicts, f)
 

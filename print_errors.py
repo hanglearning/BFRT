@@ -13,7 +13,7 @@ from error_calc import get_MAPE
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description="traffic_fedavg_simulation")
 
-parser.add_argument('-ap', '--all_predicts_path', type=str, default=None, help='the path to the all predicts file')
+parser.add_argument('-ap', '--realtime_predicts_path', type=str, default=None, help='the path to the all predicts file')
 parser.add_argument('-er', '--error_rounds', type=int, default=24, help='Show error values of the last -er number of comm rounds. For example, "-er 24" would calculate errors and show for last 24 comm rounds (1 day)')
 
 
@@ -27,7 +27,7 @@ def highlight_max(cell):
         return 'background: black; color: white'
 
 # with open(predictions_record_saved_path, 'rb') as f:
-with open(args['all_predicts_path'], 'rb') as f:
+with open(args['realtime_predicts_path'], 'rb') as f:
     sensor_predicts = pickle.load(f)
 
 for sensor_file, models_attr in sensor_predicts.items():

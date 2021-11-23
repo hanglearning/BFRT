@@ -18,7 +18,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/main.py",
             "console": "integratedTerminal",
-            "args": ["-dp", "/Users/chenhang/Documents/Working/traffic_fedavg/Preprocessed_V1.1_4sensors", "-lb", "/Users/chenhang/Documents/Working/traffic_fedavg/logs"]
+            "args": ["-dp", "/Users/chenhang/Documents/Working/traffic_fedavg/Preprocessed_V1.1_4sensors", "-lb", "/Users/chenhang/Documents/Working/traffic_fedavg/logs", "-c", "20"]
         },
         {
             "name": "plot_learning_curves.py",
@@ -35,6 +35,22 @@
             "program": "${workspaceFolder}/main.py",
             "console": "integratedTerminal",
             "args": ["-dp", "/Users/chenhang/Documents/Working/traffic_fedavg/Preprocessed_V1.1_4sensors", "-lb", "/Users/chenhang/Documents/Working/traffic_fedavg/logs", "-rp", "/Users/chenhang/Documents/Working/traffic_fedavg/logs/11152021_200702_lstm_12"]
+        },
+        {
+            "name": "plot_last_percent_prediction.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/experimental_figures/plot_last_percent_prediction.py",
+            "console": "integratedTerminal",
+            "args": ["-dp", "/Users/chenhang/Documents/Working/traffic_fedavg/Preprocessed_V1.1_4sensors", "-lp", "/Users/chenhang/Documents/Working/traffic_fedavg/logs/11222021_212450_lstm_12"]
+        },
+        {
+            "name": "plot_realtime_errors.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/plottings/plot_realtime_errors.py",
+            "console": "integratedTerminal",
+            "args": ["-lp", "/Users/chenhang/Documents/Working/traffic_fedavg/logs/11222021_212450_lstm_12"]
         },
     ]
 }

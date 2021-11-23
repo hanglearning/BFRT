@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description="traffic_fedavg plot learning curves")
 
 # arguments for system vars
-parser.add_argument('-lp', '--logs_dirpath', type=str, default=None, help='the log path where resides the all_predicts.pkl, e.g., /content/drive/MyDrive/09212021_142926_lstm')
+parser.add_argument('-lp', '--logs_dirpath', type=str, default=None, help='the log path where resides the realtime_predicts.pkl, e.g., /content/drive/MyDrive/09212021_142926_lstm')
 parser.add_argument('-pl', '--plot_last_comm_rounds', type=int, default=24, help='The number of the last comm rounds to plot. Will be a backup if starting_epoch and ending_epoch are not specified.')
 parser.add_argument('-se', '--starting_epoch', type=int, default=None, help='epoch number to start plotting')
 parser.add_argument('-ee', '--ending_epoch', type=int, default=None, help='epoch number to end plotting')
@@ -110,6 +110,6 @@ def plot_and_save(sensor_predicts):
       plt.savefig(f'{plot_dir_path}/{sensor_id}.png', bbox_inches='tight', dpi=100)
       plt.show()
 
-with open(f"{logs_dirpath}/all_predicts.pkl", 'rb') as f:
+with open(f"{logs_dirpath}/realtime_predicts.pkl", 'rb') as f:
     sensor_predicts = pickle.load(f)
 plot_and_save(sensor_predicts)

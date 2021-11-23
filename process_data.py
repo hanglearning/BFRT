@@ -97,7 +97,8 @@ def process_test_one_step(df_test, scaler, INPUT_LENGTH):
         test_set.append(flow_test[i - INPUT_LENGTH: i + 1])
     test = np.array(test_set) 
     X_test = test[:, :-1]
-    return X_test
+    y_test = test[:, -1]
+    return X_test, y_test
 
 def process_test_chained(df_test, scaler, INPUT_LENGTH):
     flow_test = scaler.transform(df_test[attr].values.reshape(-1, 1)).reshape(1, -1)[0]
