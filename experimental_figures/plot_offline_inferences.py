@@ -33,6 +33,7 @@ parser.add_argument('-lp', '--logs_dirpath', type=str, default=None, help='the l
 parser.add_argument('-dp', '--dataset_path', type=str, default='/content/drive/MyDrive/Traffic Prediction FedAvg Simulation/traffic_data/Preprocessed_V1.1_4sensors', help='dataset path')
 parser.add_argument('-ip', '--inferencing_percent', type=float, default=0.2, help='last percentage of the data for testing/inferencing')
 parser.add_argument('-tr', '--time_resolution', type=int, default=5, help='time resolution of the data, default to 5 mins')
+parser.add_argument('-mr', '--model_round', type=int, default=None, help='specify which round of the model to use, default to the latest model')
 parser.add_argument('-pr', '--plot_range', type=int, default=288, help='plot the learning curves of this number of the last predictions. default to 24*(60/5)=288 assuming 5 min resolution')
 
 args = parser.parse_args()
@@ -46,7 +47,7 @@ scaler = config_vars["scaler"]
 all_sensor_files = config_vars["all_sensor_files"]
 
 with open(f'{logs_dirpath}/baseline_model_paths.pkl', 'rb') as f:
-    baseline_models = pickle.load(f)
+    baseline_model_paths = pickle.load(f)
 INPUT_LENGTH = config_vars['input_length']
 time_res = args["time_resolution"]
 plot_range = args["plot_range"]
@@ -77,9 +78,9 @@ for sensor_file_iter in range(len(all_sensor_files)):
 
 ''' load global models '''
 # get the lastest comm round
-last_round = config_vars["last_round"]
-single_global_model = load_model(f'{logs_dirpath}/globals/single_h5/comm_{last_round}.h5')
-# multi_global_model = load_model(f'{logs_dirpath}/globals/multi_h5/comm_{last_round}.h5')
+model_round = args["model_round"] if args["model_round"] else config_vars["last_round"]
+single_global_model = load_model(f'{logs_dirpath}/globals/single_h5/comm_{model_round}.h5')
+# multi_global_model = load_model(f'{logs_dirpath}/globals/multi_h5/comm_{model_round}.h5')
 ''' load global models '''
 
 inference_record = {}
@@ -88,9 +89,13 @@ for sensor_file_iter in range(len(all_sensor_files)):
     sensor_file = all_sensor_files[sensor_file_iter]
     sensor_id = sensor_file.split('.')[0]
     inference_record[sensor_id] = {}
-    ''' load the latest baseline models '''
-    single_baseline_model = load_model(baseline_models[sensor_file]['single_baseline_model_path'])
-    # multi_baseline_model = load_model(baseline_models[sensor_file]['multi_baseline_model_path'])
+    ''' load the baseline models '''
+    try:
+        single_baseline_model = load_model(baseline_model_paths[sensor_file]['single_baseline_model_path'][model_round])
+        # multi_baseline_model = load_model(baseline_model_paths[sensor_file]['multi_baseline_model_path'][model_round])
+    except:
+        print("backward compatible to the old baseline_model_paths.pkl")
+        single_baseline_model = load_model(f'{logs_dirpath}/{sensor_id}/baseline_single_h5/comm_{model_round}.h5')
     ''' process and reshape data '''
     X_test_onestep, y_test = process_test_one_step(test_data_dict[sensor_file], scaler, INPUT_LENGTH)
     X_test_onestep = np.reshape(X_test_onestep, (X_test_onestep.shape[0], X_test_onestep.shape[1], 1))
