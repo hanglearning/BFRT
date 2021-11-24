@@ -283,6 +283,9 @@ new_sample_size_per_comm_round = INPUT_LENGTH
 
 # determine maximum comm rounds by the maximum number of data sample a device owned and the input_length
 max_comm_rounds = individual_max_data_sample // INPUT_LENGTH - 2
+# comm_rounds overwritten while resuming
+if args['comm_rounds']:
+    config_vars['comm_rounds'] = args['comm_rounds']
 if config_vars['comm_rounds']:
 	if max_comm_rounds > config_vars['comm_rounds']:
 		print(f"\nNote: the provided dataset allows running for maximum {max_comm_rounds} comm rounds but the simulation is configured to run for {config_vars['comm_rounds']} comm rounds.")

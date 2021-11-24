@@ -31,7 +31,7 @@ parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFo
 
 parser.add_argument('-lp', '--logs_dirpath', type=str, default=None, help='the log path where resides the realtime_predicts.pkl, e.g., /content/drive/MyDrive/09212021_142926_lstm')
 parser.add_argument('-dp', '--dataset_path', type=str, default='/content/drive/MyDrive/Traffic Prediction FedAvg Simulation/traffic_data/Preprocessed_V1.1_4sensors', help='dataset path')
-parser.add_argument('-ip', '--inferencing_percent', type=float, default=0.2, help='percentage of the data for testing/inferencing')
+parser.add_argument('-ip', '--inferencing_percent', type=float, default=0.2, help='last percentage of the data for testing/inferencing')
 parser.add_argument('-tr', '--time_resolution', type=int, default=5, help='time resolution of the data, default to 5 mins')
 parser.add_argument('-pr', '--plot_range', type=int, default=288, help='plot the learning curves of this number of the last predictions. default to 24*(60/5)=288 assuming 5 min resolution')
 
