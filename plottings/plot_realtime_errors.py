@@ -24,7 +24,8 @@ parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFo
 
 parser.add_argument('-lp', '--logs_dirpath', type=str, default=None, help='the log path where resides the realtime_predicts.pkl, e.g., /content/drive/MyDrive/09212021_142926_lstm')
 parser.add_argument('-et', '--error_type', type=str, default="MAE", help='error type to plot')
-# parser.add_argument('-pr', '--plot_range', type=int, default=288, help='plot the learning curves of this number of the last predictions. default to 24*(60/5)=288 assuming 5 min resolution')
+parser.add_argument('-sc', '--starting_comm_round', type=int, default=0, help='epoch number to start plotting')
+parser.add_argument('-ec', '--ending_comm_round', type=int, default=None, help='epoch number to end plotting')
 
 args = parser.parse_args()
 args = args.__dict__
@@ -38,6 +39,8 @@ all_sensor_files = config_vars["all_sensor_files"]
 with open(f'{logs_dirpath}/realtime_predicts.pkl', 'rb') as f:
     realtime_predicts = pickle.load(f)
 # plot_range = args["plot_range"]
+s_round = args["starting_comm_round"]
+e_round = args["ending_comm_round"]
 ''' load vars '''
 
 plot_dir_path = f'{logs_dirpath}/plots/realtime_errors'
@@ -59,23 +62,29 @@ def calculate_errors(realtime_predicts):
           prediction_errors[sensor_id][model]['RMSE'] = []
           prediction_errors[sensor_id][model]['MAPE'] = []
 
+          processed_rounds = set() # see plot_realtime_learning_curves.py, to be deleted in final version
           for predict in predicts:
             round = predict[0]
-            data = predict[1]
-            true_data = models_attr['true'][round - 1][1]
-            prediction_errors[sensor_id][model]['MAE'].append(get_MAE(true_data, data))
-            prediction_errors[sensor_id][model]['MSE'].append(get_MSE(true_data, data))
-            prediction_errors[sensor_id][model]['RMSE'].append(get_RMSE(true_data, data))
-            prediction_errors[sensor_id][model]['MAPE'].append(get_MAPE(true_data, data))
+            if round not in processed_rounds:
+              processed_rounds.add(round)
+              data = predict[1]
+              true_data = models_attr['true'][round - 1][1]
+              prediction_errors[sensor_id][model]['MAE'].append(get_MAE(true_data, data))
+              prediction_errors[sensor_id][model]['MSE'].append(get_MSE(true_data, data))
+              prediction_errors[sensor_id][model]['RMSE'].append(get_RMSE(true_data, data))
+              prediction_errors[sensor_id][model]['MAPE'].append(get_MAPE(true_data, data))
   return prediction_errors
 
 def plot_realtime_errors(prediction_errors, error_to_plot):
     for sensor_id, model_error in prediction_errors.items():
-        print(f"Plotting {error_to_plot} error during real time FL simulation for {sensor_id}.")
         fig = plt.figure()
         ax = fig.add_subplot(111)
-        ax.plot(range(1, len(model_error['baseline_onestep'][error_to_plot]) + 1), model_error['baseline_onestep'][error_to_plot], label='baseline_onestep', color='#ffb839')
-        ax.plot(range(1, len(model_error['global_onestep'][error_to_plot]) + 1), model_error['global_onestep'][error_to_plot], label='global_onestep', color='#5a773a')
+        # if e_round is not specified
+        if not e_round:
+          e_round = min(len(model_error['baseline_onestep'][error_to_plot]), len(model_error['global_onestep'][error_to_plot]))
+        print(f"Plotting {error_to_plot} error during real time FL simulation for {sensor_id} from round {s_round} to round {e_round}.")
+        ax.plot(range(1, len(model_error['baseline_onestep'][error_to_plot]) + 1)[s_round:e_round+1], model_error['baseline_onestep'][error_to_plot][s_round:e_round+1], label='baseline_onestep', color='#ffb839')
+        ax.plot(range(1, len(model_error['global_onestep'][error_to_plot]) + 1)[s_round:e_round+1], model_error['global_onestep'][error_to_plot][s_round:e_round+1], label='global_onestep', color='#5a773a')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.legend()
         plt.grid(True)

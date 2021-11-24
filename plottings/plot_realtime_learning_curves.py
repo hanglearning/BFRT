@@ -54,7 +54,7 @@ def plot_and_save(sensor_predicts):
         for predict in predicts:
           round = predict[0]
           if round not in processed_rounds:
-            # a simple hack to be backward compatible to the sensor_predicts in main.py which may contain duplicate training round due to resuming
+            # a simple hack to be backward compatible to the sensor_predicts in main.py which may contain duplicate training round due to resuming, to be deleted in final version
             processed_rounds.add(round)
             data = predict[1]
             plot_data[model]['x'].extend(range((round - 1) * input_length + 1, round * input_length + 1))
@@ -77,11 +77,11 @@ def plot_and_save(sensor_predicts):
       
       if s_round and e_round:
         print(f"Plotting comm round {s_round} to {e_round} for {sensor_id}.")
-        # TODO - here still has problems, potentially in other plottings too. Add customizd range for error plotting
-        # 900 910
-        # 897 908
         start_range = int(60/time_res*(s_round-1))
         end_range = int(60/time_res*e_round)
+        
+        # ax.axvline(x=start_range + 1) if want to highlight the plot-range
+        # ax.axvline(x=end_range)
         ax.plot(x[start_range:end_range], plot_data['true']['y'][start_range:end_range], label='True Data')
         
         # ax.plot(x[start_range:end_range], plot_data['global_chained']['y'][start_range:end_range], label='global_chained', color='darkgreen')
