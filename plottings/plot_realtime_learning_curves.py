@@ -78,15 +78,15 @@ def plot_and_save(sensor_predicts):
         # 897 908
         start_range = int(60/time_res*(s_round-1))
         end_range = int(60/time_res*e_round)
-        ax.plot(my_xticks[start_range:end_range], plot_data['true']['y'][start_range:end_range], label='True Data')
+        ax.plot(x[start_range:end_range], plot_data['true']['y'][start_range:end_range], label='True Data')
         
-        # ax.plot(my_xticks[start_range:end_range], plot_data['global_chained']['y'][start_range:end_range], label='global_chained', color='darkgreen')
-        ax.plot(my_xticks[start_range:end_range], plot_data['global_onestep']['y'][start_range:end_range], label='global_onestep', color='#5a773a')
-        # ax.plot(my_xticks[start_range:end_range], plot_data['global_multi']['y'][start_range:end_range], label='global_multi', color='limegreen')
+        # ax.plot(x[start_range:end_range], plot_data['global_chained']['y'][start_range:end_range], label='global_chained', color='darkgreen')
+        ax.plot(x[start_range:end_range], plot_data['global_onestep']['y'][start_range:end_range], label='global_onestep', color='#5a773a')
+        # ax.plot(x[start_range:end_range], plot_data['global_multi']['y'][start_range:end_range], label='global_multi', color='limegreen')
 
-        # ax.plot(my_xticks[start_range:end_range], plot_data['baseline_chained']['y'][start_range:end_range], label='baseline_chained', color='darkred')
-        ax.plot(my_xticks[start_range:end_range], plot_data['baseline_onestep']['y'][start_range:end_range], label='baseline_onestep', color='#ffb839')
-        # ax.plot(my_xticks[start_range:end_range], plot_data['baseline_multi']['y'][start_range:end_range], label='baseline_multi', color='lightsalmon')
+        # ax.plot(x[start_range:end_range], plot_data['baseline_chained']['y'][start_range:end_range], label='baseline_chained', color='darkred')
+        ax.plot(x[start_range:end_range], plot_data['baseline_onestep']['y'][start_range:end_range], label='baseline_onestep', color='#ffb839')
+        # ax.plot(x[start_range:end_range], plot_data['baseline_multi']['y'][start_range:end_range], label='baseline_multi', color='lightsalmon')
       else:
         # if plot_last_comm_rounds > 22, there is an empty comm at the begining for x axis
         print(f"Plotting last {plot_last_comm_rounds} comm rounds for {sensor_id}.")
