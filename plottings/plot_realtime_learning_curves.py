@@ -8,9 +8,9 @@ parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFo
 
 # arguments for system vars
 parser.add_argument('-lp', '--logs_dirpath', type=str, default=None, help='the log path where resides the realtime_predicts.pkl, e.g., /content/drive/MyDrive/09212021_142926_lstm')
-parser.add_argument('-pl', '--plot_last_comm_rounds', type=int, default=24, help='The number of the last comm rounds to plot. Will be a backup if starting_epoch and ending_epoch are not specified.')
-parser.add_argument('-se', '--starting_epoch', type=int, default=None, help='epoch number to start plotting')
-parser.add_argument('-ee', '--ending_epoch', type=int, default=None, help='epoch number to end plotting')
+parser.add_argument('-pl', '--plot_last_comm_rounds', type=int, default=24, help='The number of the last comm rounds to plot. Will be a backup if starting_comm_round and ending_comm_round are not specified.')
+parser.add_argument('-sc', '--starting_comm_round', type=int, default=None, help='epoch number to start plotting')
+parser.add_argument('-ec', '--ending_comm_round', type=int, default=None, help='epoch number to end plotting')
 parser.add_argument('-tr', '--time_resolution', type=int, default=5, help='time resolution of the data, default to 5 mins')
 
 
@@ -24,8 +24,8 @@ with open(f"{logs_dirpath}/config_vars.pkl", 'rb') as f:
 input_length = config_vars["input_length"]
 plot_last_comm_rounds = args["plot_last_comm_rounds"] # to plot last plot_last_comm_rounds hours
 time_res = args["time_resolution"]
-s_epoch = args["starting_epoch"]
-e_epoch = args["ending_epoch"]
+s_round = args["starting_comm_round"]
+e_round = args["ending_comm_round"]
 ''' Variables Required '''
 
 plot_dir_path = f'{logs_dirpath}/plots/realtime_learning_curves'
@@ -71,10 +71,10 @@ def plot_and_save(sensor_predicts):
 
       plt.xticks(x, my_xticks)
 
-      if s_epoch and e_epoch:
-        print(f"Plotting comm round {s_epoch} to {e_epoch} for {sensor_id}.")
-        start_range = int(60/time_res*(s_epoch-1))
-        end_range = int(60/time_res*e_epoch)
+      if s_round and e_round:
+        print(f"Plotting comm round {s_round} to {e_round} for {sensor_id}.")
+        start_range = int(60/time_res*(s_round-1))
+        end_range = int(60/time_res*e_round)
         ax.plot(x[start_range:end_range], plot_data['true']['y'][start_range:end_range], label='True Data')
         
         # ax.plot(x[start_range:end_range], plot_data['global_chained']['y'][start_range:end_range], label='global_chained', color='darkgreen')
