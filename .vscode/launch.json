@@ -26,7 +26,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/plottings/plot_realtime_learning_curves.py",
             "console": "integratedTerminal",
-            "args": ["-lp", "/Users/chenhang/Downloads/lp", "-sc", "900", "-ec", "910"]
+            "args": ["-lp", "/Users/chenhang/Downloads/lp", "-sr", "900", "-er", "910"]
         },
         {
             "name": "main.py resume",
@@ -50,7 +50,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/plottings/plot_realtime_errors.py",
             "console": "integratedTerminal",
-            "args": ["-lp", "/Users/chenhang/Documents/Working/traffic_fedavg/logs/11222021_212450_lstm_12"]
+            "args": ["-lp", "/Users/chenhang/Downloads/lp", "-sr", "10", "-er", "20"]
         },
     ]
 }

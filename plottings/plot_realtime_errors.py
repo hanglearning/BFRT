@@ -75,7 +75,7 @@ def calculate_errors(realtime_predicts):
               prediction_errors[sensor_id][model]['MAPE'].append(get_MAPE(true_data, data))
   return prediction_errors
 
-def plot_realtime_errors(prediction_errors, error_to_plot):
+def plot_realtime_errors(prediction_errors, error_to_plot, e_round):
     for sensor_id, model_error in prediction_errors.items():
         fig = plt.figure()
         ax = fig.add_subplot(111)
@@ -83,8 +83,8 @@ def plot_realtime_errors(prediction_errors, error_to_plot):
         if not e_round:
           e_round = min(len(model_error['baseline_onestep'][error_to_plot]), len(model_error['global_onestep'][error_to_plot]))
         print(f"Plotting {error_to_plot} error during real time FL simulation for {sensor_id} from round {s_round} to round {e_round}.")
-        ax.plot(range(1, len(model_error['baseline_onestep'][error_to_plot]) + 1)[s_round:e_round+1], model_error['baseline_onestep'][error_to_plot][s_round:e_round+1], label='baseline_onestep', color='#ffb839')
-        ax.plot(range(1, len(model_error['global_onestep'][error_to_plot]) + 1)[s_round:e_round+1], model_error['global_onestep'][error_to_plot][s_round:e_round+1], label='global_onestep', color='#5a773a')
+        ax.plot(range(1, len(model_error['baseline_onestep'][error_to_plot]) + 1)[s_round-1:e_round], model_error['baseline_onestep'][error_to_plot][s_round:e_round+1], label='baseline_onestep', color='#ffb839')
+        ax.plot(range(1, len(model_error['global_onestep'][error_to_plot]) + 1)[s_round-1:e_round], model_error['global_onestep'][error_to_plot][s_round:e_round+1], label='global_onestep', color='#5a773a')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.legend()
         plt.grid(True)
@@ -99,4 +99,4 @@ def plot_realtime_errors(prediction_errors, error_to_plot):
         plt.show()
 
 prediction_errors = calculate_errors(realtime_predicts)
-plot_realtime_errors(prediction_errors, args["error_type"])
+plot_realtime_errors(prediction_errors, args["error_type"], e_round) # not sure why must pass e_round here

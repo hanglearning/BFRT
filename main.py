@@ -156,7 +156,7 @@ if args['resume_path']:
 		sensor_predicts = pickle.load(f)
 	# load baseline model paths
 	with open(f'{logs_dirpath}/baseline_model_paths.pkl', 'rb') as f:
-		baseline_models = pickle.load(f)
+		baseline_model_paths = pickle.load(f)
 	# load global model paths
 	with open(f'{logs_dirpath}/global_model_paths.pkl', 'rb') as f:
 		global_model_paths = pickle.load(f)
@@ -203,7 +203,7 @@ else:
 		global_model_paths[0]["single"] = f'{single_global_model_path}/comm_0.h5'
 		global_model_paths[0]["multi"] = f'{multi_global_model_path}/comm_0.h5'
 	# init baseline models
-	baseline_models = {}
+	baseline_model_paths = {}
 	for sensor_file in all_sensor_files:
 		sensor_id = sensor_file.split('.')[0]
 		
@@ -236,10 +236,12 @@ else:
 			multi_baseline_model_path = f'{h5_multi_baseline_dirpath}/comm_0.h5'
 			multi_baseline_model.save(multi_baseline_model_path)
 		# record baseline models for easy access
-		baseline_models[sensor_file] = {}
-		baseline_models[sensor_file]['single_baseline_model_path'] = single_baseline_model_path
-		baseline_models[sensor_file]['multi_baseline_model_path'] = multi_baseline_model_path
-		baseline_models[sensor_file]['this_sensor_dirpath'] = this_sensor_dirpath
+		baseline_model_paths[sensor_file] = {}
+		baseline_model_paths[sensor_file]['single_baseline_model_path'] = {}
+		baseline_model_paths[sensor_file]['multi_baseline_model_path'] = {}
+  		baseline_model_paths[sensor_file]['single_baseline_model_path'][0] = single_baseline_model_path
+		baseline_model_paths[sensor_file]['multi_baseline_model_path'][0] = multi_baseline_model_path
+		baseline_model_paths[sensor_file]['this_sensor_dirpath'] = this_sensor_dirpath
 	
 	# init prediction records
 	sensor_predicts = {}
@@ -370,25 +372,25 @@ for round in range(STARTING_ROUND, run_comm_rounds + 1):
 		''' train baseline model '''
 		# single model
 		print(f"{sensor_id} training single baseline model.. (1/4)")
-		the_model = load_model(baseline_models[sensor_file]['single_baseline_model_path'])
-		new_single_baseline_model_path = train_baseline_model(the_model, round, X_train_single, y_train_single, sensor_id, baseline_models[sensor_file]['this_sensor_dirpath'], "single", config_vars['batch'], config_vars['epochs_single'])
+		the_model = load_model(baseline_model_paths[sensor_file]['single_baseline_model_path'][round-1])
+		new_single_baseline_model_path = train_baseline_model(the_model, round, X_train_single, y_train_single, sensor_id, baseline_model_paths[sensor_file]['this_sensor_dirpath'], "single", config_vars['batch'], config_vars['epochs_single'])
 		# multi model
 		print(f"{sensor_id} training multi baseline model.. (2/4)")
-		the_model = load_model(baseline_models[sensor_file]['multi_baseline_model_path'])
-		new_multi_baseline_model_path = train_baseline_model(the_model, round, X_train_multi, y_train_multi, sensor_id, baseline_models[sensor_file]['this_sensor_dirpath'], "multi", config_vars['batch'], config_vars['epochs_multi'])
+		the_model = load_model(baseline_model_paths[sensor_file]['multi_baseline_model_path'][round-1])
+		new_multi_baseline_model_path = train_baseline_model(the_model, round, X_train_multi, y_train_multi, sensor_id, baseline_model_paths[sensor_file]['this_sensor_dirpath'], "multi", config_vars['batch'], config_vars['epochs_multi'])
 		# record new baseline model paths
-		baseline_models[sensor_file]['single_baseline_model_path'] = new_single_baseline_model_path
-		baseline_models[sensor_file]['multi_baseline_model_path'] = new_multi_baseline_model_path
+		baseline_model_paths[sensor_file]['single_baseline_model_path'][round] = new_single_baseline_model_path
+		baseline_model_paths[sensor_file]['multi_baseline_model_path'][round] = new_multi_baseline_model_path
 		
 		''' train local model '''
 		# single model
 		print(f"{sensor_id} training single local model.. (3/4)")
 		local_model = load_model(global_model_paths[round-1]["single"])
-		new_single_local_model_path, new_single_local_model_weights = train_local_model(local_model, round, X_train_single, y_train_single, sensor_id, baseline_models[sensor_file]['this_sensor_dirpath'], "single", config_vars['batch'], config_vars['epochs_single'])
+		new_single_local_model_path, new_single_local_model_weights = train_local_model(local_model, round, X_train_single, y_train_single, sensor_id, baseline_model_paths[sensor_file]['this_sensor_dirpath'], "single", config_vars['batch'], config_vars['epochs_single'])
 		# multi model
 		print(f"{sensor_id} training multi local model.. (4/4)")
 		local_model = load_model(global_model_paths[round-1]["multi"])
-		new_multi_local_model_path, new_multi_local_model_weights = train_local_model(local_model, round, X_train_multi, y_train_multi, sensor_id, baseline_models[sensor_file]['this_sensor_dirpath'], "multi", config_vars['batch'], config_vars['epochs_multi'])
+		new_multi_local_model_path, new_multi_local_model_weights = train_local_model(local_model, round, X_train_multi, y_train_multi, sensor_id, baseline_model_paths[sensor_file]['this_sensor_dirpath'], "multi", config_vars['batch'], config_vars['epochs_multi'])
 		# record local model
 		single_local_model_weights.append(new_single_local_model_weights)
 		multi_local_model_weights.append(new_multi_local_model_weights)
@@ -468,7 +470,7 @@ for round in range(STARTING_ROUND, run_comm_rounds + 1):
 
 	''' Record Baseline Model Paths '''
 	with open(f'{logs_dirpath}/baseline_model_paths.pkl', 'wb') as f:
-		pickle.dump(baseline_models, f)
+		pickle.dump(baseline_model_paths, f)
 	
 	''' Record Global Model Paths '''
 	with open(f"{logs_dirpath}/global_model_paths.pkl", 'wb') as f:
