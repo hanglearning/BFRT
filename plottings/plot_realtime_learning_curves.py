@@ -9,8 +9,8 @@ parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFo
 # arguments for system vars
 parser.add_argument('-lp', '--logs_dirpath', type=str, default=None, help='the log path where resides the realtime_predicts.pkl, e.g., /content/drive/MyDrive/09212021_142926_lstm')
 parser.add_argument('-pl', '--plot_last_comm_rounds', type=int, default=24, help='The number of the last comm rounds to plot. Will be a backup if starting_comm_round and ending_comm_round are not specified.')
-parser.add_argument('-sc', '--starting_comm_round', type=int, default=None, help='epoch number to start plotting')
-parser.add_argument('-ec', '--ending_comm_round', type=int, default=None, help='epoch number to end plotting')
+parser.add_argument('-sr', '--starting_comm_round', type=int, default=None, help='epoch number to start plotting')
+parser.add_argument('-er', '--ending_comm_round', type=int, default=None, help='epoch number to end plotting')
 parser.add_argument('-tr', '--time_resolution', type=int, default=5, help='time resolution of the data, default to 5 mins')
 
 

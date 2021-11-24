@@ -24,8 +24,8 @@ parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFo
 
 parser.add_argument('-lp', '--logs_dirpath', type=str, default=None, help='the log path where resides the realtime_predicts.pkl, e.g., /content/drive/MyDrive/09212021_142926_lstm')
 parser.add_argument('-et', '--error_type', type=str, default="MAE", help='error type to plot')
-parser.add_argument('-sc', '--starting_comm_round', type=int, default=0, help='epoch number to start plotting')
-parser.add_argument('-ec', '--ending_comm_round', type=int, default=None, help='epoch number to end plotting')
+parser.add_argument('-sr', '--starting_comm_round', type=int, default=0, help='epoch number to start plotting')
+parser.add_argument('-er', '--ending_comm_round', type=int, default=None, help='epoch number to end plotting')
 
 args = parser.parse_args()
 args = args.__dict__
