@@ -50,11 +50,15 @@ def plot_and_save(sensor_predicts):
         plot_data[model]['x'] = []
         plot_data[model]['y'] = []
         
+        processed_rounds = set()
         for predict in predicts:
           round = predict[0]
-          data = predict[1]
-          plot_data[model]['x'].extend(range((round - 1) * input_length + 1, round * input_length + 1))
-          plot_data[model]['y'].extend(data)
+          if round not in processed_rounds:
+            # a simple hack to be backward compatible to the sensor_predicts in main.py which may contain duplicate training round due to resuming
+            processed_rounds.add(round)
+            data = predict[1]
+            plot_data[model]['x'].extend(range((round - 1) * input_length + 1, round * input_length + 1))
+            plot_data[model]['y'].extend(data)
 
       
       fig = plt.figure()

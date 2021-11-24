@@ -146,8 +146,8 @@ if args['resume_path']:
 	build_model = build_lstm if config_vars["model"] == 'lstm' else build_gru
 	# load starting round
 	last_round = config_vars["last_round"]
-	# to make it easy, retrain the last epoch for all models
-	STARTING_ROUND = last_round
+	# to make it easy, retrain the last comm round for all models
+	STARTING_ROUND = last_round + 1
 	# load global model
 	single_global_model = load_model(f'{logs_dirpath}/globals/single_h5/comm_{last_round}.h5')
 	multi_global_model = load_model(f'{logs_dirpath}/globals/multi_h5/comm_{last_round}.h5')
