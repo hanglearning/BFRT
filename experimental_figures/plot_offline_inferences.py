@@ -140,21 +140,21 @@ def plot_and_save(inference_record):
 
 
         # if plot_range > 22, there is an empty comm at the begining for x axis
-        print(f"Plotting last {plot_range} comm rounds for {sensor_id}.")
-        plotting_range = -int(60/time_res*plot_range)
-        ax.plot(x[-plotting_range:], plot_data['true']['y'][-plotting_range:], label='True Data')
+        print(f"Plotting last {plot_range} predictions for {sensor_id}.")
+        # plot_range = int(60/time_res*plot_range)
+        ax.plot(x[-plot_range:], plot_data['true']['y'][-plot_range:], label='True Data')
 
-        # ax.plot(x[-plotting_range:], plot_data['global_chained']['y'][-plotting_range:], label='global_chained', color='darkgreen')
-        ax.plot(x[-plotting_range:], plot_data['single_global_model_inferences']['y'][-plotting_range:], label='global_onestep', color='#5a773a')
-        # ax.plot(x[-plotting_range:], plot_data['global_multi']['y'][-plotting_range:], label='global_multi', color='limegreen')
+        # ax.plot(x[-plot_range:], plot_data['global_chained']['y'][-plot_range:], label='global_chained', color='darkgreen')
+        ax.plot(x[-plot_range:], plot_data['single_global_model_inferences']['y'][-plot_range:], label='global_onestep', color='#5a773a')
+        # ax.plot(x[-plot_range:], plot_data['global_multi']['y'][-plot_range:], label='global_multi', color='limegreen')
 
-        # ax.plot(x[-plotting_range:], plot_data['baseline_chained']['y'][-plotting_range:], label='baseline_chained', color='darkred')
-        ax.plot(x[-plotting_range:], plot_data['single_baseline_model_inferences']['y'][-plotting_range:], label='baseline_onestep', color='#ffb839')
-        # ax.plot(x[-plotting_range:], plot_data['baseline_multi']['y'][-plotting_range:], label='baseline_multi', color='lightsalmon')
+        # ax.plot(x[-plot_range:], plot_data['baseline_chained']['y'][-plot_range:], label='baseline_chained', color='darkred')
+        ax.plot(x[-plot_range:], plot_data['single_baseline_model_inferences']['y'][-plot_range:], label='baseline_onestep', color='#ffb839')
+        # ax.plot(x[-plot_range:], plot_data['baseline_multi']['y'][-plot_range:], label='baseline_multi', color='lightsalmon')
 
         plt.legend()
         plt.grid(True)
-        plt.xlabel('Timeline')
+        plt.xlabel('Prediction Timeline')
         plt.ylabel('Volume')
         plt.title(sensor_id)
         fig = plt.gcf()
