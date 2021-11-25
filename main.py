@@ -305,6 +305,15 @@ print(f"Starting FedAvg with total comm rounds {run_comm_rounds}...")
 # tf.compat.v1.disable_v2_behavior() # model trained in tf1    
 ''' Local Training, FedAvg, Prediction (simulating real-time FedAvg) '''
 # one comm round -> feed in one hour of new data (5 min resolution) if input_length = 12
+
+# save used arguments as a text file for easy review
+with open(f'{logs_dirpath}/args_used.txt', 'w') as f:
+	f.write("Command line arguments used -\n")
+	f.write(' '.join(sys.argv[1:]))
+	f.write("\n\nAll arguments used -\n")
+	for arg_name, arg in args.items():
+		f.write(f'\n--{arg_name} {arg}')
+
 for round in range(STARTING_ROUND, run_comm_rounds + 1):
 	single_local_model_weights = []
 	multi_local_model_weights = []
