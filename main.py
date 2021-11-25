@@ -239,7 +239,7 @@ else:
 		baseline_model_paths[sensor_file] = {}
 		baseline_model_paths[sensor_file]['single_baseline_model_path'] = {}
 		baseline_model_paths[sensor_file]['multi_baseline_model_path'] = {}
-  		baseline_model_paths[sensor_file]['single_baseline_model_path'][0] = single_baseline_model_path
+		baseline_model_paths[sensor_file]['single_baseline_model_path'][0] = single_baseline_model_path
 		baseline_model_paths[sensor_file]['multi_baseline_model_path'][0] = multi_baseline_model_path
 		baseline_model_paths[sensor_file]['this_sensor_dirpath'] = this_sensor_dirpath
 	
@@ -287,7 +287,7 @@ new_sample_size_per_comm_round = INPUT_LENGTH
 max_comm_rounds = individual_max_data_sample // INPUT_LENGTH - 2
 # comm_rounds overwritten while resuming
 if args['comm_rounds']:
-    config_vars['comm_rounds'] = args['comm_rounds']
+	config_vars['comm_rounds'] = args['comm_rounds']
 if config_vars['comm_rounds']:
 	if max_comm_rounds > config_vars['comm_rounds']:
 		print(f"\nNote: the provided dataset allows running for maximum {max_comm_rounds} comm rounds but the simulation is configured to run for {config_vars['comm_rounds']} comm rounds.")
@@ -298,9 +298,9 @@ if config_vars['comm_rounds']:
 	else:
 		run_comm_rounds = max_comm_rounds
 else:
-    print(f"\nNote: the provided dataset allows running for maximum {max_comm_rounds} comm rounds.")
-    run_comm_rounds = max_comm_rounds
-    
+	print(f"\nNote: the provided dataset allows running for maximum {max_comm_rounds} comm rounds.")
+	run_comm_rounds = max_comm_rounds
+	
 print(f"Starting FedAvg with total comm rounds {run_comm_rounds}...")
 # tf.compat.v1.disable_v2_behavior() # model trained in tf1    
 ''' Local Training, FedAvg, Prediction (simulating real-time FedAvg) '''
