@@ -75,7 +75,7 @@ else:
 
 	# create log folder indicating by current running date and time
 	date_time = datetime.now().strftime("%m%d%Y_%H%M%S")
-	logs_dirpath = f"{args['logs_base_folder']}/{date_time}_{args['model']}_{args['input_length']}"
+	logs_dirpath = f"{args['logs_base_folder']}/{date_time}_{args['model']}_input_{args['input_length']}_max_length_{args['max_data_length']}"
 	os.makedirs(logs_dirpath, exist_ok=True)
 	# FL config
 	model_chosen = args['model']
