@@ -319,7 +319,7 @@ for round in range(STARTING_ROUND, run_comm_rounds + 1):
 	multi_local_model_weights = []
 	single_global_weights = single_global_model.get_weights()
 	multi_global_weights = multi_global_model.get_weights()
-	print(f"Simulating comm round {round}...")
+	print(f"Simulating comm round {round}/{run_comm_rounds} ({round/run_comm_rounds:.0%})...")
 	# starting_created_time = created_time_column.iloc[training_data_starting_index] # now we assume data is preprocessed
 	X_train_records = {}
 	X_test_records = {}
