@@ -58,7 +58,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/plottings/plot_realtime_errors_interval_with_table.py",
             "console": "integratedTerminal",
-            "args": ["-lp", "/Users/chenhang/Downloads/lp", "-ei", "100"]
+            "args": ["-lp", "/Users/chenhang/Downloads/lp", "-ei", "50"]
         },
     ]
 }
