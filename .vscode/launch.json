@@ -58,7 +58,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/plottings/plot_realtime_errors_interval_with_table.py",
             "console": "integratedTerminal",
-            "args": ["-lp", "/Users/chenhang/Downloads/lp", "-ei", "50"]
+            "args": ["-lp", "/Users/chenhang/Documents/Working/plots/11172021_015510_gru_input_12_max_length_72", "-ei", "100"]
         },
         {
             "name": "plot_realtime_prediction_all_sensors.py",

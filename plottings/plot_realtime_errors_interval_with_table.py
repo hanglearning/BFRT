@@ -5,6 +5,7 @@ import os
 import pickle
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
+import matplotlib.lines as mlines
 
 import pandas as pd
 
@@ -87,7 +88,7 @@ def construct_realtime_error_table(realtime_predicts):
     return realtime_error_table
   
 
-def plot_realtime_errors(prediction_errors, error_to_plot):
+def plot_realtime_errors_one_by_one(prediction_errors, error_to_plot):
     for sensor_id, model_error in prediction_errors.items():
         fig = plt.figure()
         ax = fig.add_subplot(111)
@@ -107,6 +108,30 @@ def plot_realtime_errors(prediction_errors, error_to_plot):
         plt.savefig(f"{plot_dir_path}/{sensor_id}_{error_to_plot}_interval_{args['error_interval']}.png", bbox_inches='tight', dpi=100)
         plt.show()
 
+def plot_realtime_errors_all_sensors(prediction_errors, error_to_plot):
+    sensor_lists = [sensor_file.split('.')[0] for sensor_file in all_sensor_files]
+    
+    fig, axs = plt.subplots(1, 7, sharex=True, sharey=True)
+    plt.setp(axs, ylim=(0, 200))
+    axs[0].set_ylabel('Error')
+    
+    for sensor_plot_iter in range(len(sensor_lists)):
+        sensor_id = sensor_lists[sensor_plot_iter]
+        model_error = prediction_errors[sensor_id]
+        
+        axs[sensor_plot_iter].set_title(sensor_id)
+        
+        axs[sensor_plot_iter].plot(range(1, len(model_error['baseline_onestep'][error_to_plot]) + 1), model_error['baseline_onestep'][error_to_plot], label='baseline_onestep', color='#ffb839')
+        
+        axs[sensor_plot_iter].plot(range(1, len(model_error['global_onestep'][error_to_plot]) + 1), model_error['global_onestep'][error_to_plot], label='global_onestep', color='#5a773a')
+            
+        baseline_curve = mlines.Line2D([], [], color='#ffb839', label="BASE")
+        global_curve = mlines.Line2D([], [], color='#5a773a', label="FED")
+        
+        axs[sensor_plot_iter].legend(handles=[baseline_curve, global_curve], loc='best', prop={'size': 10})
+    plt.figure(dpi=500, figsize=(12,1))
+    plt.show()
+    
 realtime_error_table = construct_realtime_error_table(realtime_predicts)
 
 # show table
@@ -116,5 +141,5 @@ for sensor_id, model in realtime_error_table.items():
     print(tabulate(error_values_df.round(2), headers='keys', tablefmt='psql'))
     
 # show plots
-plot_realtime_errors(realtime_error_table, "MAE")
-
+# plot_realtime_errors_one_by_one(realtime_error_table, "MAE")
+plot_realtime_errors_all_sensors(realtime_error_table, "MAE")

@@ -19,25 +19,25 @@ from error_calc import get_RMSE
 from error_calc import get_MAPE
 
 # ''' Parse command line arguments '''
-# parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description="traffic_fedavg plot learning curves")
+parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description="traffic_fedavg plot learning curves")
 
-# # arguments for system vars
-# parser.add_argument('-lp', '--logs_dirpath', type=str, default=None, help='the log path where resides the realtime_predicts.pkl, e.g., /content/drive/MyDrive/09212021_142926_lstm')
-# parser.add_argument('-pl', '--plot_last_comm_rounds', type=int, default=24, help='The number of the last comm rounds to plot. Will be a backup if starting_comm_round and ending_comm_round are not specified.')
-# parser.add_argument('-sr', '--starting_comm_round', type=int, default=None, help='epoch number to start plotting')
-# parser.add_argument('-er', '--ending_comm_round', type=int, default=None, help='epoch number to end plotting')
-# parser.add_argument('-tr', '--time_resolution', type=int, default=5, help='time resolution of the data, default to 5 mins')
+# arguments for system vars
+parser.add_argument('-lp', '--logs_dirpath', type=str, default=None, help='the log path where resides the realtime_predicts.pkl, e.g., /content/drive/MyDrive/09212021_142926_lstm')
+parser.add_argument('-pl', '--plot_last_comm_rounds', type=int, default=24, help='The number of the last comm rounds to plot. Will be a backup if starting_comm_round and ending_comm_round are not specified.')
+parser.add_argument('-sr', '--starting_comm_round', type=int, default=None, help='epoch number to start plotting')
+parser.add_argument('-er', '--ending_comm_round', type=int, default=None, help='epoch number to end plotting')
+parser.add_argument('-tr', '--time_resolution', type=int, default=5, help='time resolution of the data, default to 5 mins')
 
 
-# args = parser.parse_args()
-# args = args.__dict__
+args = parser.parse_args()
+args = args.__dict__
 
-args = {}
-args["logs_dirpath"] = "/Users/chenhang/Downloads/lp2"
-args["plot_last_comm_rounds"] = 24
-args["starting_comm_round"] = None
-args["ending_comm_round"] = None
-args["time_resolution"] = 5
+# args = {}
+# args["logs_dirpath"] = "/Users/chenhang/Documents/Working/plots/11172021_015510_gru_input_12_max_length_72"
+# args["plot_last_comm_rounds"] = 24
+# args["starting_comm_round"] = None
+# args["ending_comm_round"] = None
+# args["time_resolution"] = 5
 
 ''' Variables Required '''
 logs_dirpath = args["logs_dirpath"]
@@ -115,7 +115,6 @@ def plot_and_save(sensor_lists, plot_data):
         global_curve = mlines.Line2D([], [], color='#5a773a', label="FED")
         
         axs[sensor_plot_iter].legend(handles=[true_curve,baseline_curve, global_curve], loc='best', prop={'size': 10})
- 
     plt.figure(dpi=500, figsize=(12,1))
     plt.show()
     
@@ -125,7 +124,7 @@ def calculate_errors(plot_data):
     for sensor_id, prediction_method in plot_data.items():
         error_values[sensor_id] = {}
         for model, predicts in prediction_method.items():
-            if model != 'true':
+            if model != 'true' and "onestep" in model:
                 error_values[sensor_id][model] = {}
                 error_values[sensor_id][model]['MAE'] = get_MAE(prediction_method['true']['y'][plotting_range:], predicts['y'][plotting_range:])
                 error_values[sensor_id][model]['MSE'] = get_MSE(prediction_method['true']['y'][plotting_range:], predicts['y'][plotting_range:])
@@ -139,5 +138,5 @@ def calculate_errors(plot_data):
 with open(f"{logs_dirpath}/realtime_predicts.pkl", 'rb') as f:
     sensor_predicts = pickle.load(f)
 sensor_lists, plot_data = make_plot_data(sensor_predicts)
-# plot_and_save(sensor_lists, plot_data)
+plot_and_save(sensor_lists, plot_data)
 calculate_errors(plot_data)
