@@ -172,10 +172,10 @@ def calculate_errors(inference_record):
         for model, predicts in prediction_method.items():
             if model != 'true':
                 error_values[sensor_id][model] = {}
-                error_values[sensor_id][model]['MAE'] = get_MAE(predicts, prediction_method['true'])
-                error_values[sensor_id][model]['MSE'] = get_MSE(predicts, prediction_method['true'])
-                error_values[sensor_id][model]['RMSE'] = get_RMSE(predicts, prediction_method['true'])
-                error_values[sensor_id][model]['MAPE'] = get_MAPE(predicts, prediction_method['true'])
+                error_values[sensor_id][model]['MAE'] = get_MAE(prediction_method['true'], predicts)
+                error_values[sensor_id][model]['MSE'] = get_MSE(prediction_method['true'], predicts)
+                error_values[sensor_id][model]['RMSE'] = get_RMSE(prediction_method['true'], predicts)
+                error_values[sensor_id][model]['MAPE'] = get_MAPE(prediction_method['true'], predicts)
     for sensor_id, model in error_values.items():
         print(f'\nfor {sensor_id}')
         error_values_df = pd.DataFrame.from_dict(model)

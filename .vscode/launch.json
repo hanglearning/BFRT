@@ -40,7 +40,7 @@
             "name": "plot_offline_inferences.py",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/experimental_figures/plot_offline_inferences.py",
+            "program": "${workspaceFolder}/plottings/plot_offline_inferences.py",
             "console": "integratedTerminal",
             "args": ["-dp", "/Users/chenhang/Documents/Working/traffic_fedavg/Preprocessed_V1.1_4sensors", "-lp", "/Users/chenhang/Documents/Working/traffic_fedavg/logs/11222021_212450_lstm_12"]
         },
@@ -59,6 +59,13 @@
             "program": "${workspaceFolder}/plottings/plot_realtime_errors_interval_with_table.py",
             "console": "integratedTerminal",
             "args": ["-lp", "/Users/chenhang/Downloads/lp", "-ei", "50"]
+        },
+        {
+            "name": "plot_realtime_prediction_all_sensors.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/experimental_figures/plot_realtime_prediction_all_sensors.py",
+            "console": "integratedTerminal"
         },
     ]
 }
