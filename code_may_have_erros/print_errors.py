@@ -8,7 +8,7 @@ from tabulate import tabulate
 from error_calc import get_MAE
 from error_calc import get_MSE
 from error_calc import get_RMSE
-from error_calc import get_MAPE
+from error_calc import get_MAPE # error 
 
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description="traffic_fedavg_simulation")
@@ -60,6 +60,7 @@ for sensor_file, models_attr in sensor_predicts.items():
         error_values[round]['MSE'] = get_MSE(data, global_data[round])
         error_values[round]['RMSE'] = get_RMSE(data, global_data[round])
         error_values[round]['MAPE'] = get_MAPE(data, global_data[round])
+        # error - get_MAPE(y_true, y_pred) may not be the same as the usage in here
 
     error_values_df = pd.DataFrame.from_dict(error_values)
     print(f'\nfor {sensor_id}')
