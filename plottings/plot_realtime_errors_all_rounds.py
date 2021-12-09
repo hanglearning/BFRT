@@ -79,17 +79,18 @@ def plot_realtime_errors(prediction_errors, error_to_plot, e_round):
     for sensor_id, model_error in prediction_errors.items():
         fig = plt.figure()
         ax = fig.add_subplot(111)
+        plt.setp(ax, ylim=(0, 400))
         # if e_round is not specified
         if not e_round:
           e_round = min(len(model_error['baseline_onestep'][error_to_plot]), len(model_error['global_onestep'][error_to_plot]))
         print(f"Plotting {error_to_plot} error during real time FL simulation for {sensor_id} from round {s_round} to round {e_round}.")
-        ax.plot(range(1, len(model_error['baseline_onestep'][error_to_plot]) + 1)[s_round-1:e_round], model_error['baseline_onestep'][error_to_plot][s_round:e_round+1], label='baseline_onestep', color='#ffb839')
-        ax.plot(range(1, len(model_error['global_onestep'][error_to_plot]) + 1)[s_round-1:e_round], model_error['global_onestep'][error_to_plot][s_round:e_round+1], label='global_onestep', color='#5a773a')
+        ax.plot(range(1, len(model_error['baseline_onestep'][error_to_plot]) + 1)[s_round:e_round+1], model_error['baseline_onestep'][error_to_plot][s_round:e_round+1], label='baseline_onestep', color='#ffb839')
+        ax.plot(range(1, len(model_error['global_onestep'][error_to_plot]) + 1)[s_round:e_round+1], model_error['global_onestep'][error_to_plot][s_round:e_round+1], label='global_onestep', color='#5a773a')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.legend()
         plt.grid(True)
         plt.xlabel('Comm Round')
-        plt.ylabel('Volume')
+        plt.ylabel('Error')
         plt.title(f'{sensor_id} - Real Rime {error_to_plot} Error')
         fig = plt.gcf()
         # fig.set_size_inches(228.5, 10.5)

@@ -50,7 +50,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/plottings/plot_realtime_errors_all_rounds.py",
             "console": "integratedTerminal",
-            "args": ["-lp", "/Users/chenhang/Downloads/lp", "-sr", "10", "-er", "20"]
+            "args": ["-lp", "/Users/chenhang/Documents/Working/plots/11292021_202536_lstm_input_12_max_length_24"]
         },
         {
             "name": "plot_realtime_errors_interval_with_table.py",
@@ -65,7 +65,8 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/experimental_figures/plot_realtime_prediction_all_sensors.py",
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
+            "args": ["-lp", "/Users/chenhang/Documents/Working/plots/11292021_202536_lstm_input_12_max_length_24"]
         },
     ]
 }

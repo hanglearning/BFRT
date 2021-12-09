@@ -118,6 +118,74 @@ def plot_and_save(sensor_lists, plot_data):
     plt.figure(dpi=500, figsize=(12,1))
     plt.show()
     
+def plot_and_save_two_rows(sensor_lists, plot_data):
+    """Plot
+    Plot the true data and predicted data.
+    Plot the errors between true data and predicted data.
+
+    # Arguments
+        y_true: List/ndarray, ture data.
+        y_pred: List/ndarray, predicted data.
+    """
+    
+    # draw 1 plot
+    fig, axs = plt.subplots(1, 1, sharex=True, sharey=True)
+    plt.setp(axs, ylim=(0, 800))
+    fig.text(0.04, 0.5, 'Volumes', va='center', rotation='vertical')
+    sensor_id = sensor_lists[0]
+    
+    axs.set_title(sensor_id)
+        
+    x = plot_data[sensor_id]['true']['x']
+    plotting_range = -int(60/time_res*plot_last_comm_rounds)
+    axs.plot(x[plotting_range:], plot_data[sensor_id]['true']['y'][plotting_range:], label='True Data', color='blue')
+    
+    axs.plot(x[plotting_range:], plot_data[sensor_id]['global_onestep']['y'][plotting_range:], label='global_onestep', color='#5a773a')
+
+    axs.plot(x[plotting_range:], plot_data[sensor_id]['baseline_onestep']['y'][plotting_range:], label='baseline_onestep', color='#ffb839')
+
+    true_curve = mlines.Line2D([], [], color='blue', label="TRUE")
+    baseline_curve = mlines.Line2D([], [], color='#ffb839', label="BASE")
+    global_curve = mlines.Line2D([], [], color='#5a773a', label="FED")
+    
+    axs.legend(handles=[true_curve,baseline_curve, global_curve], loc='best', prop={'size': 10})
+    plt.figure(dpi=500, figsize=(12,1))
+    plt.show()
+    
+    # draw 2 row 6 plots
+    
+    fig, axs = plt.subplots(2, 3, sharex=True, sharey=True)
+    plt.setp(axs, ylim=(0, 800))
+    # axs[0].set_ylabel('Volumes')
+    # fig.text(0.5, 0.04, 'Comm Round', ha='center')
+    fig.text(0.04, 0.5, 'Volumes', va='center', rotation='vertical')
+    
+    for sensor_plot_iter in range(len(sensor_lists[1:])):
+        # sensor_plot_iter 0 ~ 2 -> row 0, col 0 1 2
+        # sensor_plot_iter 3 ~ 5 ->row 1, col 0 1 2
+        row = sensor_plot_iter // 3
+        col = sensor_plot_iter % 3
+        
+        sensor_id = sensor_lists[sensor_plot_iter]
+        # axs[row][col].set_xlabel('Comm Round')
+        axs[row][col].set_title(sensor_id)
+        
+        x = plot_data[sensor_id]['true']['x']
+        plotting_range = -int(60/time_res*plot_last_comm_rounds)
+        axs[row][col].plot(x[plotting_range:], plot_data[sensor_id]['true']['y'][plotting_range:], label='True Data', color='blue')
+        
+        axs[row][col].plot(x[plotting_range:], plot_data[sensor_id]['global_onestep']['y'][plotting_range:], label='global_onestep', color='#5a773a')
+
+        axs[row][col].plot(x[plotting_range:], plot_data[sensor_id]['baseline_onestep']['y'][plotting_range:], label='baseline_onestep', color='#ffb839')
+    
+        true_curve = mlines.Line2D([], [], color='blue', label="TRUE")
+        baseline_curve = mlines.Line2D([], [], color='#ffb839', label="BASE")
+        global_curve = mlines.Line2D([], [], color='#5a773a', label="FED")
+        
+        axs[row][col].legend(handles=[true_curve,baseline_curve, global_curve], loc='best', prop={'size': 10})
+    plt.figure(dpi=500, figsize=(12,1))
+    plt.show()
+    
 def calculate_errors(plot_data):
     error_values = {}
     plotting_range = -int(60/time_res*plot_last_comm_rounds)
@@ -138,5 +206,6 @@ def calculate_errors(plot_data):
 with open(f"{logs_dirpath}/realtime_predicts.pkl", 'rb') as f:
     sensor_predicts = pickle.load(f)
 sensor_lists, plot_data = make_plot_data(sensor_predicts)
-plot_and_save(sensor_lists, plot_data)
+# plot_and_save(sensor_lists, plot_data)
+plot_and_save_two_rows(sensor_lists, plot_data)
 calculate_errors(plot_data)

@@ -130,6 +130,7 @@ def plot_realtime_errors_all_sensors(prediction_errors, error_to_plot):
         
         axs[sensor_plot_iter].legend(handles=[baseline_curve, global_curve], loc='best', prop={'size': 10})
     plt.figure(dpi=500, figsize=(12,1))
+    plt.savefig(f'{plot_dir_path}/real_time_errors_all_sensors.png', bbox_inches='tight', dpi=100)
     plt.show()
     
 realtime_error_table = construct_realtime_error_table(realtime_predicts)
