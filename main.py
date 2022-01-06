@@ -330,12 +330,15 @@ for round in range(STARTING_ROUND, run_comm_rounds + 1):
 		if round == 1:
 			training_data_starting_index = starting_data_index
 			training_data_ending_index = training_data_starting_index + new_sample_size_per_comm_round * 2 - 1
+			# if it's round 1 and input_shape 12, need at least 24 training data points because the model at least needs 13 points to train.
+			# Therefore,
+			# round 1 -> 1~24 training points, predict with test 13~35 test points, 
+   			# 1- 24， 2 - 36， 3 - 48， 4 - 60
 		else:
-			# 1- 24， 2 - 36， 3 - 48， 4 - 60
-			training_data_ending_index = (round + 1) * new_sample_size_per_comm_round
+			training_data_ending_index = (round + 1) * new_sample_size_per_comm_round - 1
 			training_data_starting_index = training_data_ending_index - config_vars['max_data_length']
 			if training_data_starting_index < 1:
-				training_data_starting_index = 1
+				training_data_starting_index = 0
 		whole_data = whole_data_dict[sensor_file]
 		# slice training data
 		train_data = whole_data[training_data_starting_index: training_data_ending_index + 1]

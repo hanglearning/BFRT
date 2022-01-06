@@ -18,7 +18,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/main.py",
             "console": "integratedTerminal",
-            "args": ["-dp", "/Users/chenhang/Documents/Working/traffic_fedavg/Preprocessed_V1.1_4sensors", "-lb", "/Users/chenhang/Documents/Working/traffic_fedavg/logs", "-c", "20"]
+            "args": ["-dp", "/Users/chenhang/Documents/Working/traffic_fedavg/Preprocessed_V1.1_4sensors", "-lb", "/Users/chenhang/Documents/Working/traffic_fedavg/logs"]
         },
         {
             "name": "plot_realtime_learning_curves.py",
@@ -58,7 +58,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/plottings/plot_realtime_errors_interval_with_table.py",
             "console": "integratedTerminal",
-            "args": ["-lp", "/Users/chenhang/Documents/Working/plots/11172021_015510_gru_input_12_max_length_72", "-ei", "100"]
+            "args": ["-lp", "/Users/chenhang/Documents/Working/plots/11252021_134734_gru_mdl_24", "-ei", "100"]
         },
         {
             "name": "plot_realtime_prediction_all_sensors.py",
@@ -66,7 +66,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/experimental_figures/plot_realtime_prediction_all_sensors.py",
             "console": "integratedTerminal",
-            "args": ["-lp", "/Users/chenhang/Documents/Working/plots/11292021_202536_lstm_input_12_max_length_24"]
+            "args": ["-lp", "/Users/chenhang/Documents/Working/plots/11172021_015510_gru_mdl_72"]
         },
     ]
 }
