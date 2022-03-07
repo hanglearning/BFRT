@@ -1,3 +1,5 @@
+# NOT used in CCGrid 22
+
 import argparse
 import os
 import pickle
@@ -84,12 +86,12 @@ def plot_and_save(sensor_predicts):
         # ax.axvline(x=end_range)
         ax.plot(x[start_range:end_range], plot_data['true']['y'][start_range:end_range], label='True Data')
         
-        # ax.plot(x[start_range:end_range], plot_data['global_chained']['y'][start_range:end_range], label='global_chained', color='darkgreen')
+        ax.plot(x[start_range:end_range], plot_data['global_chained']['y'][start_range:end_range], label='global_chained', color='darkgreen')
         ax.plot(x[start_range:end_range], plot_data['global_onestep']['y'][start_range:end_range], label='global_onestep', color='#5a773a')
-        # ax.plot(x[start_range:end_range], plot_data['global_multi']['y'][start_range:end_range], label='global_multi', color='limegreen')
+        ax.plot(x[start_range:end_range], plot_data['global_multi']['y'][start_range:end_range], label='global_multi', color='limegreen')
 
         # ax.plot(x[start_range:end_range], plot_data['baseline_chained']['y'][start_range:end_range], label='baseline_chained', color='darkred')
-        ax.plot(x[start_range:end_range], plot_data['baseline_onestep']['y'][start_range:end_range], label='baseline_onestep', color='#ffb839')
+        # ax.plot(x[start_range:end_range], plot_data['baseline_onestep']['y'][start_range:end_range], label='baseline_onestep', color='#ffb839')
         # ax.plot(x[start_range:end_range], plot_data['baseline_multi']['y'][start_range:end_range], label='baseline_multi', color='lightsalmon')
       else:
         # if plot_last_comm_rounds > 22, there is an empty comm at the begining for x axis
@@ -97,12 +99,12 @@ def plot_and_save(sensor_predicts):
         plotting_range = -int(60/time_res*plot_last_comm_rounds)
         ax.plot(x[plotting_range:], plot_data['true']['y'][plotting_range:], label='True Data')
         
-        # ax.plot(x[plotting_range:], plot_data['global_chained']['y'][plotting_range:], label='global_chained', color='darkgreen')
+        ax.plot(x[plotting_range:], plot_data['global_chained']['y'][plotting_range:], label='global_chained', color='darkgreen')
         ax.plot(x[plotting_range:], plot_data['global_onestep']['y'][plotting_range:], label='global_onestep', color='#5a773a')
-        # ax.plot(x[plotting_range:], plot_data['global_multi']['y'][plotting_range:], label='global_multi', color='limegreen')
+        ax.plot(x[plotting_range:], plot_data['global_multi']['y'][plotting_range:], label='global_multi', color='limegreen')
 
         # ax.plot(x[plotting_range:], plot_data['baseline_chained']['y'][plotting_range:], label='baseline_chained', color='darkred')
-        ax.plot(x[plotting_range:], plot_data['baseline_onestep']['y'][plotting_range:], label='baseline_onestep', color='#ffb839')
+        # ax.plot(x[plotting_range:], plot_data['baseline_onestep']['y'][plotting_range:], label='baseline_onestep', color='#ffb839')
         # ax.plot(x[plotting_range:], plot_data['baseline_multi']['y'][plotting_range:], label='baseline_multi', color='lightsalmon')
 
       plt.legend()

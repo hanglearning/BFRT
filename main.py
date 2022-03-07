@@ -34,8 +34,8 @@ tf.get_logger().setLevel(logging.ERROR)
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description="traffic_fedavg_simulation")
 
 # arguments for system vars
-parser.add_argument('-dp', '--dataset_path', type=str, default='/content/drive/MyDrive/Traffic Prediction FedAvg Simulation/traffic_data/Preprocessed_V1.1_4sensors', help='dataset path')
-parser.add_argument('-lb', '--logs_base_folder', type=str, default="/content/drive/MyDrive/Traffic Prediction FedAvg Simulation/device_outputs_Preprocessed_V1.1", help='base folder path to store running logs and h5 files')
+parser.add_argument('-dp', '--dataset_path', type=str, default='/content/drive/MyDrive/traffic_data/', help='dataset path')
+parser.add_argument('-lb', '--logs_base_folder', type=str, default="/content/drive/MyDrive/BFRT_logs", help='base folder path to store running logs and h5 files')
 
 # arguments for resume training
 parser.add_argument('-rp', '--resume_path', type=str, default=None, help='provide the leftover log folder path to continue FL')

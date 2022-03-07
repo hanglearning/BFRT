@@ -1,4 +1,5 @@
-# plot 4 errors during FL simulation
+# plot 4 errors for the entire FL simulation
+# NOT used in CCGrid 22
 
 import argparse
 import os

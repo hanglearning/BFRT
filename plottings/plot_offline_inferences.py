@@ -1,5 +1,5 @@
 # corresponds to - Testing code: We need to be able to run inference/testing on the final 20% of the data for all 7 detectors
-
+# NOT used in CCGrid 22
 
 import argparse
 import os
