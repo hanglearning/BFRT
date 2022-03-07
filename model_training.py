@@ -17,8 +17,9 @@ warnings.filterwarnings("ignore")
 from keras.models import load_model
 from build_lstm import build_lstm
 from build_gru import build_gru
+import os
 
-def train_baseline_model(model, comm_round, X_train, y_train, sensor_id, this_sensor_dirpath, single_or_multi, batch, epochs):
+def train_baseline_model(model, comm_round, X_train, y_train, sensor_id, this_sensor_dirpath, single_or_multi, batch, epochs, preserve_historical_models):
     """train the baseline model 
 
     # Arguments
@@ -38,15 +39,20 @@ def train_baseline_model(model, comm_round, X_train, y_train, sensor_id, this_se
         validation_split=0.00)
     
     # save model weights
-    model_file_path = f'{this_sensor_dirpath}/baseline_{single_or_multi}_h5/comm_{comm_round}.h5'
+    model_root_path = f'{this_sensor_dirpath}/baseline_{single_or_multi}_h5'
+    model_file_path = f'{model_root_path}/comm_{comm_round}.h5'
     model.save(model_file_path)
+    if not preserve_historical_models:
+        filelist = [f for f in os.listdir(model_root_path) if not f.endswith(f'comm_{comm_round}.h5')]
+        for f in filelist:
+            os.remove(os.path.join(model_root_path, f))
     # Not significant to show loss in this study
     # loss_df = pd.DataFrame.from_dict(hist.history)
     # loss_df.to_csv(f'{this_sensor_dirpath}/loss/baseline/{sensor_id}_baseline_{comm_round}.csv', encoding='utf-8', index=False)
     return model_file_path
 
 
-def train_local_model(model, comm_round, X_train, y_train, sensor_id, this_sensor_dirpath, single_or_multi, batch, epochs):
+def train_local_model(model, comm_round, X_train, y_train, sensor_id, this_sensor_dirpath, single_or_multi, batch, epochs, preserve_historical_models):
     """train the local model 
 
     # Arguments
@@ -65,8 +71,13 @@ def train_local_model(model, comm_round, X_train, y_train, sensor_id, this_senso
         validation_split=0.00)
     
     # save model weights
+    model_root_path = f'{this_sensor_dirpath}/local_{single_or_multi}_h5'
     model_file_path = f'{this_sensor_dirpath}/local_{single_or_multi}_h5/comm_{comm_round}.h5'
     model.save(model_file_path)
+    if not preserve_historical_models:
+        filelist = [f for f in os.listdir(model_root_path) if not f.endswith(f'comm_{comm_round}.h5')]
+        for f in filelist:
+            os.remove(os.path.join(model_root_path, f))
     # loss_df = pd.DataFrame.from_dict(hist.history)
     # loss_df.to_csv(f'{this_sensor_dirpath}/loss/local/{sensor_id}_local_{comm_round}.csv', encoding='utf-8', index=False)
     return model_file_path, model.get_weights()

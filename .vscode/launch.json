@@ -24,7 +24,7 @@
             "name": "plot_realtime_learning_curves.py",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/plottings/plot_realtime_learning_curves.py",
+            "program": "${workspaceFolder}/plotting_code/plot_realtime_learning_curves.py",
             "console": "integratedTerminal",
             "args": ["-lp", "/Users/chenhang/Downloads/lp", "-sr", "900", "-er", "910"]
         },
@@ -40,7 +40,7 @@
             "name": "plot_offline_inferences.py",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/plottings/plot_offline_inferences.py",
+            "program": "${workspaceFolder}/plotting_code/plot_offline_inferences.py",
             "console": "integratedTerminal",
             "args": ["-dp", "/Users/chenhang/Documents/Working/traffic_fedavg/Preprocessed_V1.1_4sensors", "-lp", "/Users/chenhang/Documents/Working/traffic_fedavg/logs/11222021_212450_lstm_12"]
         },
@@ -48,7 +48,7 @@
             "name": "plot_realtime_errors_all_rounds.py",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/plottings/plot_realtime_errors_all_rounds.py",
+            "program": "${workspaceFolder}/plotting_code/plot_realtime_errors_all_rounds.py",
             "console": "integratedTerminal",
             "args": ["-lp", "/Users/chenhang/Documents/Working/plots/11292021_202536_lstm_input_12_max_length_24"]
         },
@@ -56,7 +56,7 @@
             "name": "ccgrid_f4_plot_realtime_errors_interval_with_table.py",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/plottings/ccgrid_f4_plot_realtime_errors_interval_with_table.py",
+            "program": "${workspaceFolder}/plotting_code/ccgrid_f4_plot_realtime_errors_interval_with_table.py",
             "console": "integratedTerminal",
             "args": ["-lp", "/Users/chenhang/Documents/Working/traffic_fedavg/CCGrid_experimental_results/logs/11292021_202536_lstm_mdl_24", "-ei", "100"]
         },
@@ -64,7 +64,7 @@
             "name": "ccgrid_f3_plot_realtime_prediction_all_sensors.py",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/plottings/ccgrid_f3_plot_realtime_prediction_all_sensors.py",
+            "program": "${workspaceFolder}/plotting_code/ccgrid_f3_plot_realtime_prediction_all_sensors.py",
             "console": "integratedTerminal",
             "args": ["-lp", "/Users/chenhang/Documents/Working/fedavg plots/journal_extension/02152022_235849_gru_input_12_max_length_48_epoch_5"]
         },

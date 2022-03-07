@@ -36,6 +36,7 @@ parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFo
 # arguments for system vars
 parser.add_argument('-dp', '--dataset_path', type=str, default='/content/drive/MyDrive/traffic_data/', help='dataset path')
 parser.add_argument('-lb', '--logs_base_folder', type=str, default="/content/drive/MyDrive/BFRT_logs", help='base folder path to store running logs and h5 files')
+parser.add_argument('-pm', '--preserve_historical_models', type=int, default=0, help='whether to preserve models from old communication rounds. Consume storage. Input 1 to preserve')
 
 # arguments for resume training
 parser.add_argument('-rp', '--resume_path', type=str, default=None, help='provide the leftover log folder path to continue FL')
@@ -385,11 +386,11 @@ for round in range(STARTING_ROUND, run_comm_rounds + 1):
 		# single model
 		print(f"{sensor_id} training single baseline model.. (1/4)")
 		the_model = load_model(baseline_model_paths[sensor_file]['single_baseline_model_path'][round-1])
-		new_single_baseline_model_path = train_baseline_model(the_model, round, X_train_single, y_train_single, sensor_id, baseline_model_paths[sensor_file]['this_sensor_dirpath'], "single", config_vars['batch'], config_vars['epochs_single'])
+		new_single_baseline_model_path = train_baseline_model(the_model, round, X_train_single, y_train_single, sensor_id, baseline_model_paths[sensor_file]['this_sensor_dirpath'], "single", config_vars['batch'], config_vars['epochs_single'], config_vars['preserve_historical_models'])
 		# multi model
 		print(f"{sensor_id} training multi baseline model.. (2/4)")
 		the_model = load_model(baseline_model_paths[sensor_file]['multi_baseline_model_path'][round-1])
-		new_multi_baseline_model_path = train_baseline_model(the_model, round, X_train_multi, y_train_multi, sensor_id, baseline_model_paths[sensor_file]['this_sensor_dirpath'], "multi", config_vars['batch'], config_vars['epochs_multi'])
+		new_multi_baseline_model_path = train_baseline_model(the_model, round, X_train_multi, y_train_multi, sensor_id, baseline_model_paths[sensor_file]['this_sensor_dirpath'], "multi", config_vars['batch'], config_vars['epochs_multi'], config_vars['preserve_historical_models'])
 		# record new baseline model paths
 		baseline_model_paths[sensor_file]['single_baseline_model_path'][round] = new_single_baseline_model_path
 		baseline_model_paths[sensor_file]['multi_baseline_model_path'][round] = new_multi_baseline_model_path
@@ -398,11 +399,11 @@ for round in range(STARTING_ROUND, run_comm_rounds + 1):
 		# single model
 		print(f"{sensor_id} training single local model.. (3/4)")
 		local_model = load_model(global_model_paths[round-1]["single"])
-		new_single_local_model_path, new_single_local_model_weights = train_local_model(local_model, round, X_train_single, y_train_single, sensor_id, baseline_model_paths[sensor_file]['this_sensor_dirpath'], "single", config_vars['batch'], config_vars['epochs_single'])
+		new_single_local_model_path, new_single_local_model_weights = train_local_model(local_model, round, X_train_single, y_train_single, sensor_id, baseline_model_paths[sensor_file]['this_sensor_dirpath'], "single", config_vars['batch'], config_vars['epochs_single'], config_vars['preserve_historical_models'])
 		# multi model
 		print(f"{sensor_id} training multi local model.. (4/4)")
 		local_model = load_model(global_model_paths[round-1]["multi"])
-		new_multi_local_model_path, new_multi_local_model_weights = train_local_model(local_model, round, X_train_multi, y_train_multi, sensor_id, baseline_model_paths[sensor_file]['this_sensor_dirpath'], "multi", config_vars['batch'], config_vars['epochs_multi'])
+		new_multi_local_model_path, new_multi_local_model_weights = train_local_model(local_model, round, X_train_multi, y_train_multi, sensor_id, baseline_model_paths[sensor_file]['this_sensor_dirpath'], "multi", config_vars['batch'], config_vars['epochs_multi'], config_vars['preserve_historical_models'])
 		# record local model
 		single_local_model_weights.append(new_single_local_model_weights)
 		multi_local_model_weights.append(new_multi_local_model_weights)
@@ -437,11 +438,26 @@ for round in range(STARTING_ROUND, run_comm_rounds + 1):
 	# create single-output global model
 	single_global_weights = np.mean(single_local_model_weights, axis=0)
 	single_global_model.set_weights(single_global_weights)
-	single_global_model.save(f'{logs_dirpath}/globals/single_h5/comm_{round}.h5')
+	model_root_path = f'{logs_dirpath}/globals/single_h5'
+	single_global_model.save(f'{model_root_path}/comm_{round}.h5')
+	# clean model files if not preserve
+	if not args["preserve_historical_models"]:
+		filelist = [f for f in os.listdir(model_root_path) if not f.endswith(f'comm_{round}.h5')]
+		for f in filelist:
+			os.remove(os.path.join(model_root_path, f))
 	# create multi-output global model
 	multi_global_weights = np.mean(multi_local_model_weights, axis=0)
 	multi_global_model.set_weights(multi_global_weights)
 	multi_global_model.save(f'{logs_dirpath}/globals/multi_h5/comm_{round}.h5')
+ 
+	model_root_path = f'{logs_dirpath}/globals/multi_h5'
+	multi_global_model.save(f'{model_root_path}/comm_{round}.h5')
+	# clean model files if not preserve
+	if not args["preserve_historical_models"]:
+		filelist = [f for f in os.listdir(model_root_path) if not f.endswith(f'comm_{round}.h5')]
+		for f in filelist:
+			os.remove(os.path.join(model_root_path, f))
+ 
 	# store global model paths
 	global_model_paths[round] = {}
 	global_model_paths[round]["single"] = f'{logs_dirpath}/globals/single_h5/comm_{round}.h5'
