@@ -442,7 +442,7 @@ for round in range(STARTING_ROUND, run_comm_rounds + 1):
 	single_global_model.save(f'{model_root_path}/comm_{round}.h5')
 	# clean model files if not preserve
 	if not args["preserve_historical_models"]:
-		filelist = [f for f in os.listdir(model_root_path) if not f.endswith(f'comm_{round}.h5')]
+		filelist = [f for f in os.listdir(model_root_path) if not f.endswith(f'comm_{round}.h5') and not f.endswith(f'comm_{round-1}.h5')]
 		for f in filelist:
 			os.remove(os.path.join(model_root_path, f))
 	# create multi-output global model
@@ -454,7 +454,7 @@ for round in range(STARTING_ROUND, run_comm_rounds + 1):
 	multi_global_model.save(f'{model_root_path}/comm_{round}.h5')
 	# clean model files if not preserve
 	if not args["preserve_historical_models"]:
-		filelist = [f for f in os.listdir(model_root_path) if not f.endswith(f'comm_{round}.h5')]
+		filelist = [f for f in os.listdir(model_root_path) if not f.endswith(f'comm_{round}.h5') and not f.endswith(f'comm_{round-1}.h5')]
 		for f in filelist:
 			os.remove(os.path.join(model_root_path, f))
  

@@ -43,7 +43,7 @@ def train_baseline_model(model, comm_round, X_train, y_train, sensor_id, this_se
     model_file_path = f'{model_root_path}/comm_{comm_round}.h5'
     model.save(model_file_path)
     if not preserve_historical_models:
-        filelist = [f for f in os.listdir(model_root_path) if not f.endswith(f'comm_{comm_round}.h5')]
+        filelist = [f for f in os.listdir(model_root_path) if not f.endswith(f'comm_{comm_round}.h5' and not f.endswith(f'comm_{comm_round-1}.h5')]
         for f in filelist:
             os.remove(os.path.join(model_root_path, f))
     # Not significant to show loss in this study
@@ -75,7 +75,7 @@ def train_local_model(model, comm_round, X_train, y_train, sensor_id, this_senso
     model_file_path = f'{this_sensor_dirpath}/local_{single_or_multi}_h5/comm_{comm_round}.h5'
     model.save(model_file_path)
     if not preserve_historical_models:
-        filelist = [f for f in os.listdir(model_root_path) if not f.endswith(f'comm_{comm_round}.h5')]
+        filelist = [f for f in os.listdir(model_root_path) if not f.endswith(f'comm_{comm_round}.h5' and not f.endswith(f'comm_{comm_round-1}.h5')]
         for f in filelist:
             os.remove(os.path.join(model_root_path, f))
     # loss_df = pd.DataFrame.from_dict(hist.history)
