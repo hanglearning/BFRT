@@ -1,4 +1,5 @@
 Preprocessed_V1.1_4sensors/
 logs/**
 __pycache__/
+.vscode
 .DS_Store
