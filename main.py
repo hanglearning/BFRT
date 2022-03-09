@@ -42,22 +42,23 @@ parser.add_argument('-pm', '--preserve_historical_models', type=int, default=0, 
 parser.add_argument('-rp', '--resume_path', type=str, default=None, help='provide the leftover log folder path to continue FL')
 
 # arguments for pretrained models
-parser.add_argument('-sp', '--single_output_pretrained_path', type=str, default=None, help='The single-output pretrained model file path')
-parser.add_argument('-mp', '--multi_output_pretrained_path', type=str, default=None, help='The multi-output pretrained model file path')
+# NOT RELAVANT ANY MORE
+# parser.add_argument('-sp', '--single_output_pretrained_path', type=str, default=None, help='The single-output pretrained model file path')
+# parser.add_argument('-mp', '--multi_output_pretrained_path', type=str, default=None, help='The multi-output pretrained model file path')
 
 # arguments for learning
 parser.add_argument('-m', '--model', type=str, default='lstm', help='Model to choose - lstm or gru')
-parser.add_argument('-il', '--input_length', type=int, default=12, help='input length for the LSTM network')
-parser.add_argument('-hn', '--hidden_neurons', type=int, default=128, help='number of neurons in 2 layers')
+parser.add_argument('-il', '--input_length', type=int, default=12, help='input length for the LSTM/GRU network')
+parser.add_argument('-hn', '--hidden_neurons', type=int, default=128, help='number of neurons in one of each 2 layers')
 parser.add_argument('-b', '--batch', type=int, default=1, help='batch number for training')
-parser.add_argument('-es', '--epochs_single', type=int, default=5, help='epoch number for models with single output per comm round for FL')
-parser.add_argument('-em', '--epochs_multi', type=int, default=5, help='epoch number for models with multiple output per comm round for FL')
+parser.add_argument('-e', '--epochs_single', type=int, default=5, help='epoch number for models with single output per comm round for FL')
+parser.add_argument('-em', '--epochs_multi', type=int, default=0, help='epoch number for models with multiple output per comm round for FL')
 parser.add_argument('-ff', '--num_feedforward', type=int, default=12, help='number of feedforward predictions, used to set up the number of the last layer of the model and the number of chained predictions (usually it has to be equal to -il)')
-parser.add_argument('-tp', '--train_percent', type=float, default=0.8, help='percentage of the data for training')
+# parser.add_argument('-tp', '--train_percent', type=float, default=0.8, help='percentage of the data for training')
 
 # arguments for federated learning
 parser.add_argument('-c', '--comm_rounds', type=int, default=None, help='number of comm rounds, default aims to run until data is exhausted')
-parser.add_argument('-ml', '--max_data_length', type=int, default=72, help='maximum data length for training in each communication round, simulating a memory a sensor has')
+parser.add_argument('-ml', '--max_data_length', type=int, default=24, help='maximum data length for training in each communication round, simulating the memory space a sensor has')
 
 args = parser.parse_args()
 args = args.__dict__

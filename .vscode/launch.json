@@ -66,7 +66,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/plotting_code/ccgrid_f3_plot_realtime_prediction_all_sensors.py",
             "console": "integratedTerminal",
-            "args": ["-lp", "/Users/chenhang/Documents/Working/fedavg plots/journal_extension/02152022_235849_gru_input_12_max_length_48_epoch_5"]
+            "args": ["-lp", "/Users/chenhang/Downloads/Collin/48 LSTM/"]
         },
     ]
 }
