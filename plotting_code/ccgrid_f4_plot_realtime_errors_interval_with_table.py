@@ -29,6 +29,9 @@ parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFo
 
 parser.add_argument('-lp', '--logs_dirpath', type=str, default=None, help='the log path where resides the realtime_predicts.pkl, e.g., /content/drive/MyDrive/09212021_142926_lstm')
 parser.add_argument('-ei', '--error_interval', type=int, default=100, help='unit is comm rounds, used in showing error table')
+parser.add_argument('-et', '--error_type', type=str, default="MAE", help='the error type to plot and calculate')
+parser.add_argument('-yt', '--y_top', type=int, default=150, help='the max error value on y-axis')
+
 
 args = parser.parse_args()
 args = args.__dict__
@@ -173,8 +176,7 @@ def plot_realtime_errors_all_sensors(realtime_error_table, all_prediction_errors
         
        
         axs[sensor_plot_iter].set_xticks([0, num_of_plot_points // 2, num_of_plot_points - 1])
-        # hard code 1165, will change
-        axs[sensor_plot_iter].set_xticklabels([f'  1-\n{e_interval}', f'{(num_of_plot_points // 2 - 1) * e_interval}-\n{num_of_plot_points // 2 * e_interval}', f'{(num_of_plot_points - 1) * e_interval}-\n1165'], fontsize=8)
+        axs[sensor_plot_iter].set_xticklabels([f'  1-\n{e_interval}', f'{(num_of_plot_points // 2 - 1) * e_interval}-\n{num_of_plot_points // 2 * e_interval}', f'{(num_of_plot_points - 1) * e_interval}-\n{config_vars["last_round"]}'], fontsize=8)
         
         # compare two models and show smaller-error-value percentage
         # normalized
@@ -209,14 +211,16 @@ def plot_realtime_errors_all_sensors(realtime_error_table, all_prediction_errors
 realtime_error_table = construct_realtime_error_table(realtime_predicts)
 
 # show table
-for sensor_id, model in realtime_error_table.items():
-    print(f'\nfor {sensor_id}')
-    error_values_df = pd.DataFrame.from_dict(model)
-    print(tabulate(error_values_df.round(2), headers='keys', tablefmt='psql'))
+with open(f'{plot_dir_path}/errors.txt', "w") as file:
+  for sensor_id, model in realtime_error_table.items():  
+      file.write(f'\nfor {sensor_id}')
+      error_values_df = pd.DataFrame.from_dict(model)
+      file.write(tabulate(error_values_df.round(2), headers='keys', tablefmt='psql'))
+      file.write('\n')
     
 # show plots
 all_prediction_errors = calculate_errors(realtime_predicts) # calculate global model outperform percentage
-plot_realtime_errors_all_sensors(realtime_error_table, all_prediction_errors, "MAE", 100)
+plot_realtime_errors_all_sensors(realtime_error_table, all_prediction_errors, args['error_type'], args['y_top'])
 # error_ylim = dict(MAE = 200, MSE = 6000, RMSE = 80, MAPE = 0.6)
 # for error_type in error_ylim.keys():
 #   plot_realtime_errors_all_sensors(realtime_error_table, error_type, error_ylim[error_type])

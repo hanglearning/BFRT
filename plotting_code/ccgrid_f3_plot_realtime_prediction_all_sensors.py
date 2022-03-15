@@ -79,11 +79,6 @@ def make_plot_data(sensor_predicts):
 def plot_and_save_two_rows(sensor_lists, plot_data):
     """Plot
     Plot the true data and predicted data.
-    Plot the errors between true data and predicted data.
-
-    # Arguments
-        y_true: List/ndarray, ture data.
-        y_pred: List/ndarray, predicted data.
     """
     
     # draw 1 plot
@@ -109,7 +104,7 @@ def plot_and_save_two_rows(sensor_lists, plot_data):
     ax.plot(range(plotting_range), plot_data[sensor_id]['true']['y'][-plotting_range:], label='True Data', color='blue')
     true_curve = mlines.Line2D([], [], color='blue', label="TRUE")
     
-    ''' CCGrid Version 
+    ''' CCGrid Version '''
     
     ax.plot(range(plotting_range), plot_data[sensor_id]['global_onestep']['y'][-plotting_range:], label='global_onestep', color='lime')
 
@@ -124,9 +119,8 @@ def plot_and_save_two_rows(sensor_lists, plot_data):
     # plt.show()
     
     
-    '''
     
-    ''' Journal Extension '''
+    ''' Journal Extension 
     
     ax.plot(range(plotting_range), plot_data[sensor_id]['global_onestep']['y'][-plotting_range:], label='global_onestep', color='lime')
 
@@ -143,6 +137,8 @@ def plot_and_save_two_rows(sensor_lists, plot_data):
     plt.savefig(f'{plot_dir_path}/single_figure.png', bbox_inches='tight', dpi=500)
     # plt.show()
     
+    '''
+    
     # draw 2 row 6 plots
     
     fig, axs = plt.subplots(2, 3, sharex=True, sharey=True)
@@ -153,9 +149,8 @@ def plot_and_save_two_rows(sensor_lists, plot_data):
     axs[1][1].set_xlabel('Round Index', size=13)
     
     
-    # HARD CODE
     my_xticks = [0, plotting_range//2, plotting_range-2]
-    my_xticklabels = [1142, 1154, 1165]
+    my_xticklabels = [config_vars["last_round"] - plot_last_comm_rounds + 1, config_vars["last_round"] - plot_last_comm_rounds//2 + 1, config_vars["last_round"]]
     
       
     for sensor_plot_iter in range(len(sensor_lists[1:])):
@@ -176,7 +171,7 @@ def plot_and_save_two_rows(sensor_lists, plot_data):
         axs[row][col].plot(range(plotting_range), plot_data[sensor_id]['true']['y'][-plotting_range:], label='True Data', color='blue')
         true_curve = mlines.Line2D([], [], color='blue', label="TRUE")
         
-        ''' CCGrid Version
+        ''' CCGrid Version '''
         axs[row][col].plot(range(plotting_range), plot_data[sensor_id]['global_onestep']['y'][-plotting_range:], label='global_onestep', color='lime')
 
         axs[row][col].plot(range(plotting_range), plot_data[sensor_id]['baseline_onestep']['y'][-plotting_range:], label='baseline_onestep', color='orange')
@@ -185,7 +180,9 @@ def plot_and_save_two_rows(sensor_lists, plot_data):
         global_curve = mlines.Line2D([], [], color='lime', label="FED")
         
         axs[row][col].legend(handles=[true_curve,baseline_curve, global_curve], loc='best', prop={'size': 10})
-        '''
+        
+        
+        ''' Journal Extension
         
         axs[row][col].plot(range(plotting_range), plot_data[sensor_id]['global_onestep']['y'][-plotting_range:], label='global_onestep', color='lime')
 
@@ -198,6 +195,8 @@ def plot_and_save_two_rows(sensor_lists, plot_data):
         global_multi_curve = mlines.Line2D([], [], color='darkgreen', label="MULTI")
         
         axs[row][col].legend(handles=[true_curve,global_onestep_curve, global_chained_curve, global_multi_curve], loc='best', prop={'size': 10})
+        
+        '''
         
     fig.set_size_inches(10, 4)
     plt.savefig(f'{plot_dir_path}/multi_figure.png', bbox_inches='tight', dpi=300)
@@ -216,10 +215,12 @@ def calculate_errors(plot_data):
                 error_values[sensor_id][model]['MSE'] = get_MSE(prediction_method['true']['y'][-plotting_range:], predicts['y'][-plotting_range:])
                 error_values[sensor_id][model]['RMSE'] = get_RMSE(prediction_method['true']['y'][-plotting_range:], predicts['y'][-plotting_range:])
                 error_values[sensor_id][model]['MAPE'] = get_MAPE(prediction_method['true']['y'][-plotting_range:], predicts['y'][-plotting_range:])
-    for sensor_id, model in error_values.items():
-        print(f'\nfor {sensor_id}')
-        error_values_df = pd.DataFrame.from_dict(model)
-        print(tabulate(error_values_df.round(2), headers='keys', tablefmt='psql'))
+    with open(f'{plot_dir_path}/errors.txt', "w") as file:
+        for sensor_id, model in error_values.items():
+            file.write(f'\nfor {sensor_id}\n')
+            error_values_df = pd.DataFrame.from_dict(model)
+            file.write(tabulate(error_values_df.round(2), headers='keys', tablefmt='psql'))
+            file.write('\n')
     
 with open(f"{logs_dirpath}/realtime_predicts.pkl", 'rb') as f:
     sensor_predicts = pickle.load(f)
