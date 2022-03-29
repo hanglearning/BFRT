@@ -84,7 +84,8 @@ def make_plot_data(sensor_predicts):
 
     return sensor_lists, plot_data
   
-def plot_and_save_two_rows(sensor_lists, plot_data, COL):
+def plot_and_save_two_rows(sensor_lists, plot_data):
+    global COL # Not sure why have to do this here, and not for ROW
     """Plot
     Plot the true data and predicted data.
     """
@@ -256,5 +257,5 @@ with open(f"{logs_dirpath}/realtime_predicts.pkl", 'rb') as f:
     sensor_predicts = pickle.load(f)
 sensor_lists, plot_data = make_plot_data(sensor_predicts)
 # plot_and_save(sensor_lists, plot_data)
-plot_and_save_two_rows(sensor_lists, plot_data, COL)
+plot_and_save_two_rows(sensor_lists, plot_data)
 calculate_errors(plot_data)
