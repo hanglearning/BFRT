@@ -42,9 +42,9 @@ parser.add_argument('-pm', '--preserve_historical_models', type=int, default=0, 
 parser.add_argument('-rp', '--resume_path', type=str, default=None, help='provide the leftover log folder path to continue FL')
 
 # arguments for pretrained models
-# NOT RELAVANT ANY MORE
-# parser.add_argument('-sp', '--single_output_pretrained_path', type=str, default=None, help='The single-output pretrained model file path')
-# parser.add_argument('-mp', '--multi_output_pretrained_path', type=str, default=None, help='The multi-output pretrained model file path')
+# Readers: These two args are NOT used in CCGrid
+parser.add_argument('-sp', '--single_output_pretrained_path', type=str, default=None, help='The single-output pretrained model file path')
+parser.add_argument('-mp', '--multi_output_pretrained_path', type=str, default=None, help='The multi-output pretrained model file path')
 
 # arguments for learning
 parser.add_argument('-m', '--model', type=str, default='lstm', help='Model to choose - lstm or gru')
