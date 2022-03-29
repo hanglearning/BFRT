@@ -31,7 +31,8 @@ parser.add_argument('-lp', '--logs_dirpath', type=str, default=None, help='the l
 parser.add_argument('-ei', '--error_interval', type=int, default=100, help='unit is comm rounds, used in showing error table')
 parser.add_argument('-et', '--error_type', type=str, default="MAE", help='the error type to plot and calculate')
 parser.add_argument('-yt', '--y_top', type=int, default=150, help='the max error value on y-axis')
-
+parser.add_argument('-row', '--row', type=int, default=1, help='number of rows in the plot')
+parser.add_argument('-col', '--column', type=int, default=None, help='number of columns in the plot')
 
 args = parser.parse_args()
 args = args.__dict__
@@ -48,6 +49,9 @@ all_sensor_files = config_vars["all_sensor_files"]
 
 with open(f'{logs_dirpath}/realtime_predicts.pkl', 'rb') as f:
     realtime_predicts = pickle.load(f)
+    
+ROW = args["row"]
+COL = args["column"]
 
 ''' load vars '''
 
@@ -158,25 +162,52 @@ def compare_l1_smaller_equal_percent(l1, l2):
 
 def plot_realtime_errors_all_sensors(realtime_error_table, all_prediction_errors, error_to_plot, ylim):
     sensor_lists = [sensor_file.split('.')[0] for sensor_file in all_sensor_files]
-    
-    fig, axs = plt.subplots(1, 7, sharex=True, sharey=True)
+    # sensor_lists = ['19940_03-10-2017_to_05-10-2017']
+    # if ROW == 1:
+    #   COL = len(sensor_lists)
+    if ROW != 1 and COL == None:
+        sys.exit(f"Please specify the number of columns.")
+    if ROW == 1 and COL == None:
+        COL = len(sensor_lists)
+    fig, axs = plt.subplots(ROW, COL, sharex=True, sharey=True)
     plt.setp(axs, ylim=(0, ylim))
-    axs[0].set_ylabel(f'{error_to_plot} Error', size=13)
+    if ROW == 1 and COL == 1:
+        axs.set_xlabel('Round Range', size=13)
+        axs.set_ylabel(f'{error_to_plot} Error', size=13)
+    elif ROW == 1 and COL > 1:
+        axs[COL//2].set_xlabel('Round Range', size=13)
+        axs[0].set_ylabel(f'{error_to_plot} Error', size=13)
+    elif ROW > 1 and COL > 1:
+        axs[ROW-1][COL//2].set_xlabel('Round Range', size=13)
+        axs[ROW//2][0].set_ylabel(f'{error_to_plot} Error', size=13)
+      
+    # axs[0].set_ylabel(f'{error_to_plot} Error', size=13)
     # fig.text(0.5, 0.04, 'Comm Round Index', ha='center', size=13)
-    axs[3].set_xlabel(f'Round Range', size=13)
+    # axs[COL//2].set_xlabel(f'Round Range', size=13)
     
     for sensor_plot_iter in range(len(sensor_lists)):
+      
+        row = sensor_plot_iter // COL
+        col = sensor_plot_iter % COL
+
+        if ROW == 1 and COL == 1:
+          subplots = axs
+        elif ROW == 1 and COL > 1:
+          subplots = axs[sensor_plot_iter]
+        elif ROW > 1 and COL > 1:
+          subplots = axs[row][col]
+          
         sensor_id = sensor_lists[sensor_plot_iter]
         model_error_normalized = realtime_error_table[sensor_id]
         
-        axs[sensor_plot_iter].set_title(sensor_id)
+        subplots.set_title(sensor_id)
         
         num_of_plot_points = len(model_error_normalized['baseline_onestep'][error_to_plot])
         e_interval = args["error_interval"]
         
-       
-        axs[sensor_plot_iter].set_xticks([0, num_of_plot_points // 2, num_of_plot_points - 1])
-        axs[sensor_plot_iter].set_xticklabels([f'  1-\n{e_interval}', f'{(num_of_plot_points // 2 - 1) * e_interval}-\n{num_of_plot_points // 2 * e_interval}', f'{(num_of_plot_points - 1) * e_interval}-\n{config_vars["last_round"]}'], fontsize=8)
+        
+        subplots.set_xticks([0, num_of_plot_points // 2, num_of_plot_points - 1])
+        subplots.set_xticklabels([f'  1-\n{e_interval}', f'{(num_of_plot_points // 2 - 1) * e_interval}-\n{num_of_plot_points // 2 * e_interval}', f'{(num_of_plot_points - 1) * e_interval}-\n{config_vars["last_round"]}'], fontsize=8)
         
         # compare two models and show smaller-error-value percentage
         # normalized
@@ -185,21 +216,21 @@ def plot_realtime_errors_all_sensors(realtime_error_table, all_prediction_errors
         # all real
         # global_better_percent_val, global_better_percent_string = compare_l1_smaller_equal_percent(all_prediction_errors[sensor_id]['global_onestep'][error_to_plot], all_prediction_errors[sensor_id]['baseline_onestep'][error_to_plot])
         
-        axs[sensor_plot_iter].plot(range(0, num_of_plot_points), model_error_normalized['baseline_onestep'][error_to_plot], label='baseline_onestep', color='#ffb839')
+        subplots.plot(range(0, num_of_plot_points), model_error_normalized['baseline_onestep'][error_to_plot], label='baseline_onestep', color='#ffb839')
         
         if global_better_percent_val >= 0.5:
           annotation_color = 'red'
         else:
           annotation_color = 'black'
-        axs[sensor_plot_iter].annotate(global_better_percent_string, xy=(num_of_plot_points - 5, model_error_normalized['baseline_onestep'][error_to_plot][-5] + 10), size=8, color=annotation_color)
+        subplots.annotate(global_better_percent_string, xy=(num_of_plot_points - 5, model_error_normalized['baseline_onestep'][error_to_plot][-5] + 10), size=8, color=annotation_color)
         
-        axs[sensor_plot_iter].plot(range(len(model_error_normalized['global_onestep'][error_to_plot])), model_error_normalized['global_onestep'][error_to_plot], label='global_onestep', color='#5a773a')
+        subplots.plot(range(len(model_error_normalized['global_onestep'][error_to_plot])), model_error_normalized['global_onestep'][error_to_plot], label='global_onestep', color='#5a773a')
         
         if sensor_plot_iter == 0:   
           baseline_curve = mlines.Line2D([], [], color='#ffb839', label="BASE")
           global_curve = mlines.Line2D([], [], color='#5a773a', label="FED")
         
-          axs[sensor_plot_iter].legend(handles=[baseline_curve, global_curve], loc='best', prop={'size': 10})
+          subplots.legend(handles=[baseline_curve, global_curve], loc='best', prop={'size': 10})
     # show legend on each plot
     # baseline_curve = mlines.Line2D([], [], color='#ffb839', label="BASE")
     # global_curve = mlines.Line2D([], [], color='#5a773a', label="FED")    

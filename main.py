@@ -54,7 +54,7 @@ parser.add_argument('-b', '--batch', type=int, default=1, help='batch number for
 parser.add_argument('-e', '--epochs_single', type=int, default=5, help='epoch number for models with single output per comm round for FL')
 parser.add_argument('-em', '--epochs_multi', type=int, default=0, help='epoch number for models with multiple output per comm round for FL')
 parser.add_argument('-ff', '--num_feedforward', type=int, default=12, help='number of feedforward predictions, used to set up the number of the last layer of the model and the number of chained predictions (usually it has to be equal to -il)')
-# parser.add_argument('-tp', '--train_percent', type=float, default=0.8, help='percentage of the data for training')
+parser.add_argument('-tp', '--train_percent', type=float, default=1.0, help='percentage of the data for training')
 
 # arguments for federated learning
 parser.add_argument('-c', '--comm_rounds', type=int, default=None, help='number of comm rounds, default aims to run until data is exhausted')
@@ -123,7 +123,7 @@ NOTE - Naive iterating over data. Will not deal with potential repeated or missi
 # read whole data for each sensor
 whole_data_dict = {}
 whole_data_list = [] # to calculate scaler
-individual_max_data_sample = 0 # to determine max comm rounds
+individual_min_data_sample = 0 # to determine max comm rounds
 for sensor_file_iter in range(len(all_sensor_files)):
 	sensor_file = all_sensor_files[sensor_file_iter]
 	# data file path
@@ -134,7 +134,7 @@ for sensor_file_iter in range(len(all_sensor_files)):
 	reader = csv.reader(file)
 	num_lines = len(list(reader))
 	read_to_line = int((num_lines-1) * config_vars["train_percent"])
-	individual_max_data_sample = read_to_line if read_to_line > individual_max_data_sample else individual_max_data_sample
+	individual_min_data_sample = read_to_line if read_to_line < individual_min_data_sample else individual_min_data_sample
 	whole_data = pd.read_csv(file_path, nrows=read_to_line, encoding='utf-8').fillna(0)
 	print(f'Loaded {read_to_line} lines of data from {sensor_file} (percentage: {config_vars["train_percent"]}). ({sensor_file_iter+1}/{len(all_sensor_files)})')
 	whole_data_dict[sensor_file] = whole_data
@@ -286,7 +286,7 @@ INPUT_LENGTH = config_vars['input_length']
 new_sample_size_per_comm_round = INPUT_LENGTH
 
 # determine maximum comm rounds by the maximum number of data sample a device owned and the input_length
-max_comm_rounds = individual_max_data_sample // INPUT_LENGTH - 2
+max_comm_rounds = individual_min_data_sample // INPUT_LENGTH - 2
 # comm_rounds overwritten while resuming
 if args['comm_rounds']:
 	config_vars['comm_rounds'] = args['comm_rounds']

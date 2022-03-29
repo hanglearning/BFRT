@@ -30,6 +30,10 @@ parser.add_argument('-er', '--ending_comm_round', type=int, default=None, help='
 parser.add_argument('-tr', '--time_resolution', type=int, default=5, help='time resolution of the data, default to 5 mins')
 parser.add_argument('-sd', '--single_plot_x_axis_density', type=int, default=1, help='label the 1 large plot x-axis by every this number of ticks')
 parser.add_argument('-md', '--multi_plot_x_axis_density', type=int, default=4, help='label the multi sub plots x-axis by every this number of ticks')
+parser.add_argument('-v', '--version', type=str, default='c', help='c for ccgrid for one step model, or j for journal extension for chained or multi-output models')
+parser.add_argument('-r', '--representative', type=str, default=None, help='detector id to be the representative figure. By default, it is kind of random')
+parser.add_argument('-row', '--row', type=int, default=1, help='number of rows in subplots')
+parser.add_argument('-col', '--column', type=int, default=None, help='number of columns in subplots')
 
 args = parser.parse_args()
 args = args.__dict__
@@ -45,6 +49,8 @@ s_round = args["starting_comm_round"]
 e_round = args["ending_comm_round"]
 sing_x_density = args["single_plot_x_axis_density"]
 mul_x_density = args["multi_plot_x_axis_density"]
+ROW = args["row"]
+COL = args["column"]
 ''' Variables Required '''
 
 plot_dir_path = f'{logs_dirpath}/plots/realtime_learning_curves_all_sensors'
@@ -87,7 +93,8 @@ def plot_and_save_two_rows(sensor_lists, plot_data):
     plt.setp(ax, ylim=(0, 800))
     fig.text(0.04, 0.5, 'Volume', va='center', rotation='vertical')
     ax.set_xlabel('Round Index')
-    sensor_id = sensor_lists[0]
+    # sensor_id = sensor_lists[0]
+    sensor_id = args['representative']
     
     ax.set_title(sensor_id)
     
@@ -104,99 +111,122 @@ def plot_and_save_two_rows(sensor_lists, plot_data):
     ax.plot(range(plotting_range), plot_data[sensor_id]['true']['y'][-plotting_range:], label='True Data', color='blue')
     true_curve = mlines.Line2D([], [], color='blue', label="TRUE")
     
-    ''' CCGrid Version '''
+    if args['version'] == 'c':
+        
+        ''' CCGrid Version '''
     
-    ax.plot(range(plotting_range), plot_data[sensor_id]['global_onestep']['y'][-plotting_range:], label='global_onestep', color='lime')
+        ax.plot(range(plotting_range), plot_data[sensor_id]['global_onestep']['y'][-plotting_range:], label='global_onestep', color='lime')
 
-    ax.plot(range(plotting_range), plot_data[sensor_id]['baseline_onestep']['y'][-plotting_range:], label='baseline_onestep', color='orange')
+        ax.plot(range(plotting_range), plot_data[sensor_id]['baseline_onestep']['y'][-plotting_range:], label='baseline_onestep', color='orange')
 
-    baseline_curve = mlines.Line2D([], [], color='orange', label="BASE")
-    global_curve = mlines.Line2D([], [], color='lime', label="FED")
+        baseline_curve = mlines.Line2D([], [], color='orange', label="BASE")
+        global_curve = mlines.Line2D([], [], color='lime', label="FED")
+        
+        ax.legend(handles=[true_curve,baseline_curve, global_curve], loc='best', prop={'size': 10})
+        fig.set_size_inches(8, 2)
+        plt.savefig(f'{plot_dir_path}/single_figure.png', bbox_inches='tight', dpi=500)
+        # plt.show()
     
-    ax.legend(handles=[true_curve,baseline_curve, global_curve], loc='best', prop={'size': 10})
-    fig.set_size_inches(8, 2)
-    plt.savefig(f'{plot_dir_path}/single_figure.png', bbox_inches='tight', dpi=500)
-    # plt.show()
-    
-    
-    
-    ''' Journal Extension 
-    
-    ax.plot(range(plotting_range), plot_data[sensor_id]['global_onestep']['y'][-plotting_range:], label='global_onestep', color='lime')
+    else:    
+        ''' Journal Extension '''
+        
+        ax.plot(range(plotting_range), plot_data[sensor_id]['global_onestep']['y'][-plotting_range:], label='global_onestep', color='lime')
 
-    ax.plot(range(plotting_range), plot_data[sensor_id]['global_chained']['y'][-plotting_range:], label='global_chained', color='orange')
-    
-    ax.plot(range(plotting_range), plot_data[sensor_id]['global_multi']['y'][-plotting_range:], label='global_multi', color='darkgreen')
+        ax.plot(range(plotting_range), plot_data[sensor_id]['global_chained']['y'][-plotting_range:], label='global_chained', color='orange')
+        
+        ax.plot(range(plotting_range), plot_data[sensor_id]['global_multi']['y'][-plotting_range:], label='global_multi', color='darkgreen')
 
-    global_onestep_curve = mlines.Line2D([], [], color='lime', label="ONE")
-    global_chained_curve = mlines.Line2D([], [], color='orange', label="CHAINED")
-    global_multi_curve = mlines.Line2D([], [], color='darkgreen', label="MULTI")
+        global_onestep_curve = mlines.Line2D([], [], color='lime', label="ONE")
+        global_chained_curve = mlines.Line2D([], [], color='orange', label="CHAINED")
+        global_multi_curve = mlines.Line2D([], [], color='darkgreen', label="MULTI")
+        
+        ax.legend(handles=[true_curve,global_onestep_curve, global_chained_curve, global_multi_curve], loc='best', prop={'size': 10})
+        fig.set_size_inches(8, 2)
+        plt.savefig(f'{plot_dir_path}/single_figure.png', bbox_inches='tight', dpi=500)
+        # plt.show()
     
-    ax.legend(handles=[true_curve,global_onestep_curve, global_chained_curve, global_multi_curve], loc='best', prop={'size': 10})
-    fig.set_size_inches(8, 2)
-    plt.savefig(f'{plot_dir_path}/single_figure.png', bbox_inches='tight', dpi=500)
-    # plt.show()
-    
-    '''
-    
-    # draw 2 row 6 plots
-    
-    fig, axs = plt.subplots(2, 3, sharex=True, sharey=True)
+    # draw subplots
+    # default - draw 2 row and 3 col = 6 plots
+    # if COL == 1:
+    #     fig, axs = plt.subplots(ROW, sharex=True, sharey=True)
+    # else:
+    if ROW != 1 and COL == None:
+        sys.exit(f"Please specify the number of columns.")
+    if ROW == 1 and COL == None:
+        COL = len(sensor_lists) - 1
+    fig, axs = plt.subplots(ROW, COL, sharex=True, sharey=True)
     plt.setp(axs, ylim=(0, 800))
     # axs[0].set_ylabel('Volume')
     # fig.text(0.5, 0.04, 'Round Index', ha='center', size=13)
     fig.text(0.04, 0.5, 'Volume', va='center', rotation='vertical', size=13)
-    axs[1][1].set_xlabel('Round Index', size=13)
+    if ROW == 1 and COL == 1:
+        axs.set_xlabel('Round Index', size=13)
+    elif ROW == 1 and COL > 1:
+        axs[COL//2].set_xlabel('Round Index', size=13)
+    elif ROW > 1 and COL > 1:
+        axs[ROW-1][COL//2].set_xlabel('Round Index', size=13)
     
     
     my_xticks = [0, plotting_range//2, plotting_range-2]
     my_xticklabels = [config_vars["last_round"] - plot_last_comm_rounds + 1, config_vars["last_round"] - plot_last_comm_rounds//2 + 1, config_vars["last_round"]]
     
-      
-    for sensor_plot_iter in range(len(sensor_lists[1:])):
+    
+    sensor_lists.remove(args['representative'])
+    for sensor_plot_iter in range(len(sensor_lists)):
+        # for 6 plots
         # sensor_plot_iter 0 ~ 2 -> row 0, col 0 1 2
         # sensor_plot_iter 3 ~ 5 ->row 1, col 0 1 2
-        row = sensor_plot_iter // 3
-        col = sensor_plot_iter % 3
+        # row = sensor_plot_iter // 3
+        # col = sensor_plot_iter % 3
+        row = sensor_plot_iter // COL
+        col = sensor_plot_iter % COL
+
+        if ROW == 1 and COL == 1:
+          subplots = axs
+        elif ROW == 1 and COL > 1:
+          subplots = axs[sensor_plot_iter]
+        elif ROW > 1 and COL > 1:
+          subplots = axs[row][col]
         
-        sensor_id = sensor_lists[1:][sensor_plot_iter]
-        # axs[row][col].set_xlabel('Comm Round')
-        axs[row][col].set_title(sensor_id)
+        sensor_id = sensor_lists[sensor_plot_iter]
+        # subplots.set_xlabel('Comm Round')
+        subplots.set_title(sensor_id)
         
         plotting_range = int(60/time_res*plot_last_comm_rounds)
         
-        axs[row][col].set_xticks(my_xticks)
-        axs[row][col].set_xticklabels(my_xticklabels)
+        subplots.set_xticks(my_xticks)
+        subplots.set_xticklabels(my_xticklabels)
         
-        axs[row][col].plot(range(plotting_range), plot_data[sensor_id]['true']['y'][-plotting_range:], label='True Data', color='blue')
+        subplots.plot(range(plotting_range), plot_data[sensor_id]['true']['y'][-plotting_range:], label='True Data', color='blue')
         true_curve = mlines.Line2D([], [], color='blue', label="TRUE")
         
-        ''' CCGrid Version '''
-        axs[row][col].plot(range(plotting_range), plot_data[sensor_id]['global_onestep']['y'][-plotting_range:], label='global_onestep', color='lime')
+        if args['version'] == 'c':
+            ''' CCGrid Version '''
+            subplots.plot(range(plotting_range), plot_data[sensor_id]['global_onestep']['y'][-plotting_range:], label='global_onestep', color='lime')
 
-        axs[row][col].plot(range(plotting_range), plot_data[sensor_id]['baseline_onestep']['y'][-plotting_range:], label='baseline_onestep', color='orange')
-    
-        baseline_curve = mlines.Line2D([], [], color='orange', label="BASE")
-        global_curve = mlines.Line2D([], [], color='lime', label="FED")
+            subplots.plot(range(plotting_range), plot_data[sensor_id]['baseline_onestep']['y'][-plotting_range:], label='baseline_onestep', color='orange')
         
-        axs[row][col].legend(handles=[true_curve,baseline_curve, global_curve], loc='best', prop={'size': 10})
-        
-        
-        ''' Journal Extension
-        
-        axs[row][col].plot(range(plotting_range), plot_data[sensor_id]['global_onestep']['y'][-plotting_range:], label='global_onestep', color='lime')
+            baseline_curve = mlines.Line2D([], [], color='orange', label="BASE")
+            global_curve = mlines.Line2D([], [], color='lime', label="FED")
+            
+            subplots.legend(handles=[true_curve,baseline_curve, global_curve], loc='best', prop={'size': 10})
+            
+        else:        
+            ''' Journal Extension '''
+            
+            subplots.plot(range(plotting_range), plot_data[sensor_id]['global_onestep']['y'][-plotting_range:], label='global_onestep', color='lime')
 
-        axs[row][col].plot(range(plotting_range), plot_data[sensor_id]['global_chained']['y'][-plotting_range:], label='global_chained', color='orange')
+            subplots.plot(range(plotting_range), plot_data[sensor_id]['global_chained']['y'][-plotting_range:], label='global_chained', color='orange')
+            
+            subplots.plot(range(plotting_range), plot_data[sensor_id]['global_multi']['y'][-plotting_range:], label='global_multi', color='darkgreen')
         
-        axs[row][col].plot(range(plotting_range), plot_data[sensor_id]['global_multi']['y'][-plotting_range:], label='global_multi', color='darkgreen')
-    
-        global_onestep_curve = mlines.Line2D([], [], color='lime', label="ONE")
-        global_chained_curve = mlines.Line2D([], [], color='orange', label="CHAINED")
-        global_multi_curve = mlines.Line2D([], [], color='darkgreen', label="MULTI")
+            global_onestep_curve = mlines.Line2D([], [], color='lime', label="ONE")
+            global_chained_curve = mlines.Line2D([], [], color='orange', label="CHAINED")
+            global_multi_curve = mlines.Line2D([], [], color='darkgreen', label="MULTI")
+            
+            subplots.legend(handles=[true_curve,global_onestep_curve, global_chained_curve, global_multi_curve], loc='best', prop={'size': 10})
+            
         
-        axs[row][col].legend(handles=[true_curve,global_onestep_curve, global_chained_curve, global_multi_curve], loc='best', prop={'size': 10})
-        
-        '''
         
     fig.set_size_inches(10, 4)
     plt.savefig(f'{plot_dir_path}/multi_figure.png', bbox_inches='tight', dpi=300)
