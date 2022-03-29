@@ -1,4 +1,5 @@
 """Sliding INPUT_LENGTH data points per window."""
+""" Readers: This code is not used in CCGrid. You may ignore this file. """
 import numpy as np
 
 # code for chain prediction
