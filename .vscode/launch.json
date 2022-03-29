@@ -58,7 +58,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/plotting_code/ccgrid_f4_plot_realtime_errors_interval_with_table.py",
             "console": "integratedTerminal",
-            "args": ["-lp", "/Users/chenhang/Downloads/Collin_Models_for_Hao_Study/7", "-ei", "100", "-et", "MAE", "-yt", "50"]
+            "args": ["-lp", "/Users/chenhang/Downloads/11162021_162737_lstm_mdl_72", "-ei", "100", "-et", "MAE", "-yt", "150", "-row", "1"]
         },
         {
             "name": "ccgrid_f3_plot_realtime_prediction_all_sensors.py",
@@ -66,7 +66,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/plotting_code/ccgrid_f3_plot_realtime_prediction_all_sensors.py",
             "console": "integratedTerminal",
-            "args": ["-lp", "/Users/chenhang/Downloads/Collin_Models_for_Hao_Study/7", "-r", "19940_03-10-2017_to_05-10-2017", "-row", "2", "-col", "3"]
+            "args": ["-lp", "/Users/chenhang/Downloads/11162021_162737_lstm_mdl_72", "-r", "19912_NB", "-row", "2", "-col", "3"]
         },
     ]
 }

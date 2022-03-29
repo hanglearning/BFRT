@@ -52,7 +52,8 @@ with open(f'{logs_dirpath}/realtime_predicts.pkl', 'rb') as f:
     
 ROW = args["row"]
 COL = args["column"]
-
+if ROW != 1 and COL is None:
+    sys.exit(f"Please specify the number of columns.")
 ''' load vars '''
 
 plot_dir_path = f'{logs_dirpath}/plots/realtime_errors_interval'
@@ -160,14 +161,12 @@ def compare_l1_smaller_equal_percent(l1, l2):
   percent_string = f"{percentage:.2%}"
   return percentage, percent_string
 
-def plot_realtime_errors_all_sensors(realtime_error_table, all_prediction_errors, error_to_plot, ylim):
+def plot_realtime_errors_all_sensors(realtime_error_table, all_prediction_errors, error_to_plot, ylim, COL):
     sensor_lists = [sensor_file.split('.')[0] for sensor_file in all_sensor_files]
     # sensor_lists = ['19940_03-10-2017_to_05-10-2017']
     # if ROW == 1:
     #   COL = len(sensor_lists)
-    if ROW != 1 and COL == None:
-        sys.exit(f"Please specify the number of columns.")
-    if ROW == 1 and COL == None:
+    if ROW == 1 and COL is None:
         COL = len(sensor_lists)
     fig, axs = plt.subplots(ROW, COL, sharex=True, sharey=True)
     plt.setp(axs, ylim=(0, ylim))
@@ -251,7 +250,7 @@ with open(f'{plot_dir_path}/errors.txt', "w") as file:
     
 # show plots
 all_prediction_errors = calculate_errors(realtime_predicts) # calculate global model outperform percentage
-plot_realtime_errors_all_sensors(realtime_error_table, all_prediction_errors, args['error_type'], args['y_top'])
+plot_realtime_errors_all_sensors(realtime_error_table, all_prediction_errors, args['error_type'], args['y_top'], COL)
 # error_ylim = dict(MAE = 200, MSE = 6000, RMSE = 80, MAPE = 0.6)
 # for error_type in error_ylim.keys():
 #   plot_realtime_errors_all_sensors(realtime_error_table, error_type, error_ylim[error_type])

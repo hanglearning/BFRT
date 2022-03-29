@@ -51,6 +51,8 @@ sing_x_density = args["single_plot_x_axis_density"]
 mul_x_density = args["multi_plot_x_axis_density"]
 ROW = args["row"]
 COL = args["column"]
+if ROW != 1 and COL is None:
+    sys.exit(f"Please specify the number of columns.")
 ''' Variables Required '''
 
 plot_dir_path = f'{logs_dirpath}/plots/realtime_learning_curves_all_sensors'
@@ -82,7 +84,7 @@ def make_plot_data(sensor_predicts):
 
     return sensor_lists, plot_data
   
-def plot_and_save_two_rows(sensor_lists, plot_data):
+def plot_and_save_two_rows(sensor_lists, plot_data, COL):
     """Plot
     Plot the true data and predicted data.
     """
@@ -150,9 +152,7 @@ def plot_and_save_two_rows(sensor_lists, plot_data):
     # if COL == 1:
     #     fig, axs = plt.subplots(ROW, sharex=True, sharey=True)
     # else:
-    if ROW != 1 and COL == None:
-        sys.exit(f"Please specify the number of columns.")
-    if ROW == 1 and COL == None:
+    if ROW == 1 and COL is None:
         COL = len(sensor_lists) - 1
     fig, axs = plt.subplots(ROW, COL, sharex=True, sharey=True)
     plt.setp(axs, ylim=(0, 800))
@@ -256,5 +256,5 @@ with open(f"{logs_dirpath}/realtime_predicts.pkl", 'rb') as f:
     sensor_predicts = pickle.load(f)
 sensor_lists, plot_data = make_plot_data(sensor_predicts)
 # plot_and_save(sensor_lists, plot_data)
-plot_and_save_two_rows(sensor_lists, plot_data)
+plot_and_save_two_rows(sensor_lists, plot_data, COL)
 calculate_errors(plot_data)

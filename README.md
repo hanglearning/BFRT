@@ -114,4 +114,5 @@ Please raise any issues and concerns you found. Thank you!
 ## Acknowledgments
 
 (1) Our federated learning code is extended from the LSTM and GRU central learning methods found in this [xiaochus's TrafficFlowPrediction repo](https://github.com/xiaochus/TrafficFlowPrediction). Thank you!
+
 (2) This document was composed for free at [StackEdit](https://stackedit.io/).
