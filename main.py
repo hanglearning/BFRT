@@ -123,7 +123,7 @@ NOTE - Naive iterating over data. Will not deal with potential repeated or missi
 # read whole data for each sensor
 whole_data_dict = {}
 whole_data_list = [] # to calculate scaler
-individual_min_data_sample = 0 # to determine max comm rounds
+individual_min_data_sample = float('inf') # to determine max comm rounds
 for sensor_file_iter in range(len(all_sensor_files)):
 	sensor_file = all_sensor_files[sensor_file_iter]
 	# data file path
@@ -285,7 +285,7 @@ else:
 INPUT_LENGTH = config_vars['input_length']
 new_sample_size_per_comm_round = INPUT_LENGTH
 
-# determine maximum comm rounds by the maximum number of data sample a device owned and the input_length
+# determine maximum comm rounds by the minimum number of data sample a device owned and the input_length
 max_comm_rounds = individual_min_data_sample // INPUT_LENGTH - 2
 # comm_rounds overwritten while resuming
 if args['comm_rounds']:

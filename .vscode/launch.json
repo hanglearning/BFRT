@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/pretrain.py",
             "console": "integratedTerminal",
-            "args": ["-dp", "/Users/chenhang/Documents/Working/traffic_fedavg/Preprocessed_V1.1_4sensors", "-lb", "/Users/chenhang/Documents/Working/traffic_fedavg/logs"]
+            "args": ["-dp", "/Users/chenhang/Downloads/Preprocessed_V1.1", "-lb", "/Users/chenhang/Documents/Working/traffic_fedavg/logs"]
         },
         {
             "name": "main.py",
@@ -18,7 +18,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/main.py",
             "console": "integratedTerminal",
-            "args": ["-dp", "/Users/chenhang/Documents/Working/traffic_fedavg/Preprocessed_V1.1_4sensors", "-lb", "/Users/chenhang/Documents/Working/traffic_fedavg/logs"]
+            "args": ["-dp", "/Users/chenhang/Downloads/Preprocessed_V1.1", "-lb", "/Users/chenhang/Documents/Working/traffic_fedavg/logs"]
         },
         {
             "name": "plot_realtime_learning_curves.py",
