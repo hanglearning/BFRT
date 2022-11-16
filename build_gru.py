@@ -1,8 +1,7 @@
 """
 Defination of NN GRU model
 """
-from keras.layers import Dense, Dropout, Activation
-from keras.layers.recurrent import GRU
+from keras.layers import Dense, Dropout, Activation, GRU
 from keras.models import Sequential
 
 def build_gru(units):
